@@ -17,7 +17,7 @@ You need [Node.js](https://nodejs.org/) 18 or higher installed.
 
 ```bash
 npm install
-npm run dev
+npm run dev test
 ```
 
 Opens at http://localhost:5173

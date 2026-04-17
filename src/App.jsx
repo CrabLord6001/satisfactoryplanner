@@ -30,22 +30,19 @@ const T = {
 const GAMES = {
   satisfactory: {
     title: "Satisfactory",
-    tagline: "Automate. Optimize. Expand.",
-    genre: "Factory Builder / Open World",
-    desc: "Factory builder on an alien planet. I mostly play this for the production chain optimization — figuring out the perfect ratios and building clean factory floors.",
+    desc: "Factory builder on an alien planet. Optimize your production",
     color: "#f97316",
     colorDim: "rgba(249,115,22,0.12)",
     hours: "500+",
     tools: [
-      { name: "Production Planner", desc: "Visual flowchart with foundation footprints, alt recipes, and Somersloop support", route: "satisfactory/planner", icon: "⚙️", ready: true },
+      { name: "Production Planner", desc: "Visual flowchart with foundation footprints", route: "satisfactory/planner", icon: "⚙️", ready: true },
       { name: "Build Showcase", desc: "Short videos of factory builds and automation setups", route: "satisfactory/showcase", icon: "🎬", ready: true },
-      { name: "Recipe Database", desc: "All recipes with alt recipe tier ratings", route: "satisfactory/recipes", icon: "📖", ready: false },
+      { name: "Save Tracker", desc: "Airtable to-do list for tracking progress", route: "satisfactory/saves", icon: "💾", ready: true },
     ],
     tips: [
-      "Always build on foundations — it saves headaches later",
-      "Manifold setups are simpler than load balancers for most builds",
-      "Somersloop your bottleneck machines, not your cheapest ones",
-      "Steel Screw alt recipe is S-tier — eliminates the Iron Rod → Screw chain entirely",
+      "Always build on foundations",
+      "Manifold save space and reduce spaghetti",
+      "Somersloop your bottleneck machines",
     ],
   },
 };
@@ -643,6 +640,33 @@ function BuildShowcasePage() {
   );
 }
 
+function SaveTrackerPage() {
+  const game = GAMES.satisfactory;
+  return (
+    <div>
+      <Nav current="satisfactory" />
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 20px" }}>
+        <div style={{ padding: "32px 0 24px" }}>
+          <a onClick={() => go("satisfactory")} style={{ cursor: "pointer", color: T.dim, fontSize: 11, fontFamily: T.font, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>← Satisfactory</a>
+          <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 6px", color: game.color }}>Save Tracker</h1>
+          <p style={{ fontSize: 12, color: T.dim, margin: "0 0 20px", fontFamily: T.font }}>To-do list and progress notes for active game saves.</p>
+        </div>
+        <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 48 }}>
+          <iframe
+            src="https://airtable.com/embed/appxctElpzY5nCCkY/shr7ZUbsRo1J8l7eH"
+            frameBorder="0"
+            onMouseWheel=""
+            width="100%"
+            height="600"
+            style={{ background: "transparent", display: "block" }}
+          />
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
 // ─── ROUTER ───
 export default function App() {
   const hash = useHash();
@@ -650,6 +674,7 @@ export default function App() {
   if (hash === "") page = <HomePage />;
   else if (hash === "satisfactory/planner") page = <PlannerPage />;
   else if (hash === "satisfactory/showcase") page = <BuildShowcasePage />;
+  else if (hash === "satisfactory/saves") page = <SaveTrackerPage />;
   else if (hash.includes("/") && !GAMES[hash.split("/")[0]]) page = <HomePage />;
   else if (hash.includes("/")) {
     const [gameKey, tool] = hash.split("/");

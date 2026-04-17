@@ -590,9 +590,10 @@ function PlannerPage() {
 }
 
 // ─── BUILD SHOWCASE DATA ───
-// To add a new build: drop the .mp4 file into public/videos/ and add an entry below.
+// To add a new build: upload to YouTube and add an entry below with the video ID from the URL.
+// YouTube URL: https://www.youtube.com/watch?v=VIDEO_ID  →  youtubeId: "VIDEO_ID"
 const BUILDS = [
-  // { id: 1, title: "Iron Smelting Array", desc: "Clean manifold setup for early-game iron.", file: "iron-smelting.mp4", date: "2025-06-01" },
+  { id: 1, title: "Iron Production Line", desc: "Early-game iron setup — smelting and plating.", youtubeId: "qCuDT8GmLrI", date: "2026-04-17" },
 ];
 
 function BuildShowcasePage() {
@@ -628,11 +629,15 @@ function BuildShowcasePage() {
                   background: T.card, border: `1px solid ${hov === b.id ? game.color : T.border}`,
                   borderRadius: 14, overflow: "hidden", transition: "border-color 0.2s",
                 }}>
-                <video
-                  src={`/videos/${b.file}`}
-                  controls
-                  style={{ width: "100%", display: "block", maxHeight: 500, background: "#000" }}
-                />
+                <div style={{ position: "relative", paddingBottom: "56.25%", background: "#000" }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${b.youtubeId}`}
+                    title={b.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                  />
+                </div>
                 <div style={{ padding: "16px 20px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                     <h3 style={{ fontSize: 16, fontWeight: 700, fontFamily: T.font, color: game.color, margin: 0 }}>{b.title}</h3>
@@ -648,8 +653,6 @@ function BuildShowcasePage() {
       <Footer />
     </div>
   );
-}
-
 }
 
 // ─── ROUTER ───

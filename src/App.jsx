@@ -48,46 +48,6 @@ const GAMES = {
       "Steel Screw alt recipe is S-tier — eliminates the Iron Rod → Screw chain entirely",
     ],
   },
-  noita: {
-    title: "Noita",
-    tagline: "Every pixel is simulated. Every death is a lesson.",
-    genre: "Action Roguelite / Physics Sandbox",
-    desc: "Action roguelite where every pixel is physically simulated. 513 hours in and I'm still finding secrets. The wand building system is endlessly deep and the community puzzles are insane.",
-    color: "#a855f7",
-    colorDim: "rgba(168,85,247,0.12)",
-    hours: "513",
-    tools: [
-      { name: "Wand Builder Guide", desc: "Spell combos and wand mechanics notes", route: "noita/wands", icon: "🪄", ready: false },
-      { name: "Achievement Guide", desc: "All achievements and unlock conditions", route: "noita/achievements", icon: "🏆", ready: false },
-      { name: "Biome Map", desc: "Map of biomes, secrets, and orb locations", route: "noita/map", icon: "🗺️", ready: false },
-    ],
-    tips: [
-      "Never kick barrels of unknown liquid — they're probably polymorphine or chaotic polymorphine",
-      "Always-cast wands are incredibly powerful — look for Chainsaw as an always-cast for infinite mana",
-      "Water is your best friend early game — it puts out fires AND dilutes dangerous liquids",
-      "The game has WAY more content than the main path. Explore east, west, and up",
-    ],
-  },
-  rimworld: {
-    title: "RimWorld",
-    tagline: "Stories emerge from chaos.",
-    genre: "Colony Sim / Story Generator",
-    desc: "Colony sim where every playthrough tells a different story. I keep coming back for the base building and the chaos of managing colonists who insist on having mental breaks at the worst possible time.",
-    color: "#22d3ee",
-    colorDim: "rgba(34,211,238,0.12)",
-    hours: "300+",
-    tools: [
-      { name: "Colony Planner", desc: "Base layout ideas and room efficiency notes", route: "rimworld/planner", icon: "🏗️", ready: false },
-      { name: "Mod Guide", desc: "Mods I use for different playstyles", route: "rimworld/mods", icon: "🔧", ready: false },
-      { name: "Defense Calculator", desc: "Killbox layouts and raid threat reference", route: "rimworld/defense", icon: "🛡️", ready: false },
-    ],
-    tips: [
-      "Grow rice early game for fast food, switch to corn once you're stable",
-      "Killboxes work but feel cheap — try mountain bases for natural chokepoints",
-      "Psychic drones stack with colonist mood debuffs — always have beer and rec rooms ready",
-      "Pawns with 'Too Smart' or 'Industrious' traits are worth recruiting even with bad skills",
-    ],
-  },
 };
 
 // ─── COMPONENTS ───
@@ -229,22 +189,6 @@ function HomePage() {
           ))}
         </div>
 
-        {/* Stats bar */}
-        <div style={{
-          display: "flex", justifyContent: "center", gap: 32, padding: "20px 0 48px",
-          flexWrap: "wrap",
-        }}>
-          {[
-            { label: "Games covered", val: "3", col: T.accent },
-            { label: "Tools built", val: "1", col: "#22d3ee" },
-            { label: "Coming soon", val: "8", col: "#a855f7" },
-          ].map(s => (
-            <div key={s.label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 26, fontWeight: 800, fontFamily: T.mono, color: s.col }}>{s.val}</div>
-              <div style={{ fontSize: 10, fontFamily: T.font, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em" }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
       <Footer />
     </div>
@@ -567,7 +511,7 @@ function PlannerPage() {
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 16px" }}>
         <div style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: drag?"grabbing":"grab" }}
-          onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu}>
+          onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu} onClick={() => setSel(null)}>
           <svg width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
             <defs><pattern id="fg" width={F} height={F} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x%(F*zoom)},${pan.y%(F*zoom)}) scale(${zoom})`}>
               <rect width={F} height={F} fill="none" stroke="#161e2c" strokeWidth="0.5" /></pattern></defs>
@@ -578,11 +522,55 @@ function PlannerPage() {
               <path d="M1 2L8 5L1 8" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" /></marker></defs>
             <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
               {lo.edges.map((e,i) => <PEdge key={i} e={e} />)}
-              {lo.nodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => setSel(n.id)} />)}
+              {lo.nodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => { n.hasAlts ? setSel(n.id) : setSel(null); }} />)}
             </g>
           </svg>}
           <div style={{ position: "absolute", bottom: 6, right: 8, color: "#3a5570", fontSize: 9, fontFamily: "monospace" }}>{(zoom*100).toFixed(0)}%</div>
+          {!sel && <div style={{ position: "absolute", top: 8, left: 10, color: "#3a5570", fontSize: 9, fontFamily: "monospace" }}>Click a node with alts to swap recipe</div>}
         </div>
+
+        {/* Alt recipe panel */}
+        {sel && lo && (() => {
+          const node = lo.nodes.find(n => n.id === sel);
+          if (!node || !node.hasAlts) return null;
+          const alts = getAlts(node.item);
+          const active = ch[node.item] || "default";
+          const r = getR(node.item, ch);
+          return (
+            <div style={{ background: "#0d1117", border: "1px solid #2d3748", borderRadius: 8, padding: "12px 16px", marginTop: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{node.item}</span>
+                <span style={{ color: "#4a5568", fontSize: 9, fontFamily: "monospace" }}>click canvas to dismiss</span>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {["default", ...alts].map(rn => {
+                  const rec = ALL_RECIPES[node.item]?.[rn];
+                  const isActive = active === rn;
+                  const tierCol = rec?.tier ? TIER_COL[rec.tier] : null;
+                  return (
+                    <button key={rn} onClick={e => { e.stopPropagation(); toggleR(node.item, rn); }}
+                      style={{
+                        padding: "5px 10px", borderRadius: 6, fontSize: 10, cursor: "pointer",
+                        fontFamily: "'JetBrains Mono',monospace", fontWeight: 600,
+                        border: `1px solid ${isActive ? "#fbbf24" : "#2d3748"}`,
+                        background: isActive ? "rgba(251,191,36,0.12)" : "#151b2b",
+                        color: isActive ? "#fbbf24" : "#94a3b8",
+                      }}>
+                      {rn === "default" ? "Default" : rn}
+                      {tierCol && <span style={{ marginLeft: 5, color: tierCol, fontSize: 9 }}>[{rec.tier}]</span>}
+                      {isActive && <span style={{ marginLeft: 5, color: "#fbbf24" }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {r && !r.raw && (
+                <div style={{ marginTop: 8, fontSize: 9, color: "#4a5568", fontFamily: "monospace" }}>
+                  {r.inputs.map(([inp, qty]) => `${qty}x ${inp}`).join(" + ")} → {r.output}x {node.item} · {r.rate}/min · {r.machine}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
       <Footer />
     </div>

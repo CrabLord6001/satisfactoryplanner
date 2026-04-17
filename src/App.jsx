@@ -128,24 +128,25 @@ function GameCard({ gameKey, game }) {
         border: `2px solid ${hov ? game.color : T.border}`,
         borderRadius: 14, cursor: "pointer",
         transition: "all 0.3s ease", position: "relative", overflow: "hidden",
-        boxShadow: hov ? `0 0 40px ${game.colorDim}, 0 0 0 1px ${game.color}33` : "none",
+        boxShadow: hov ? `0 0 32px ${game.colorDim}, 0 0 0 1px ${game.color}44` : "none",
         transform: hov ? "translateY(-4px)" : "translateY(0)",
+        padding: "20px 32px",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: "fit-content",
       }}>
-      {/* Accent glow bar */}
+      {/* Orange glow bar along top */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 3, zIndex: 2,
+        position: "absolute", top: 0, left: 0, right: 0, height: 3,
         background: `linear-gradient(90deg, transparent, ${game.color}, transparent)`,
-        opacity: hov ? 1 : 0.4, transition: "opacity 0.3s",
+        opacity: hov ? 1 : 0.35, transition: "opacity 0.3s",
       }} />
       {game.logo ? (
         <img src={game.logo} alt={game.title}
-          style={{ width: "100%", maxHeight: 160, display: "block", objectFit: "cover", objectPosition: "center" }}
+          style={{ maxWidth: "100%", maxHeight: 72, objectFit: "contain", display: "block", filter: hov ? "brightness(1.1)" : "brightness(0.9)", transition: "filter 0.3s" }}
           draggable={false}
         />
       ) : (
-        <div style={{ padding: "28px 24px" }}>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: T.font, color: game.color }}>{game.title}</h2>
-        </div>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: T.font, color: game.color }}>{game.title}</h2>
       )}
     </div>
   );
@@ -173,7 +174,7 @@ function HomePage() {
         </div>
 
         {/* Game grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, paddingBottom: 40 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 14, paddingBottom: 40 }}>
           {Object.entries(GAMES).map(([key, game]) => (
             <GameCard key={key} gameKey={key} game={game} />
           ))}
@@ -592,17 +593,13 @@ function MNode({ n, sel, onSel, onDragStart, rotation }) {
   const cx = n.w / 2, cy = n.h / 2;
 
   return (
-    <g transform={`translate(${n.x},${n.y})`}
+    <g transform={`translate(${n.x},${n.y})${rot ? ` rotate(${rot},${cx},${cy})` : ""}`}
        onMouseDown={e => { e.stopPropagation(); onDragStart(e, n); }}
        onClick={e => { e.stopPropagation(); onSel(n); }}
        style={{ cursor: "grab" }}>
       <rect width={n.w} height={n.h} rx={6} fill="#0d1117" stroke={sel === n.id ? "#fbbf24" : c.stroke} strokeWidth={sel === n.id ? 2 : 1} opacity={0.95} />
-      {/* Machine cells — rotate around node center */}
-      <g transform={rot ? `rotate(${rot},${cx},${cy})` : undefined}>
-        {manifoldLines}
-        {cells}
-      </g>
-      {/* Labels always stay horizontal */}
+      {manifoldLines}
+      {cells}
       <text x={cx} y={12} textAnchor="middle" fill={c.text} fontSize={10} fontWeight={600} fontFamily="system-ui">{n.item.length > 20 ? n.item.slice(0,18)+".." : n.item}</text>
       {n.raw
         ? <text x={cx} y={n.h-6} textAnchor="middle" fill="#68d391" fontSize={9} fontFamily="monospace">{n.rate.toFixed(1)}/min</text>

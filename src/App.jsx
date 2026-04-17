@@ -295,10 +295,12 @@ const ALL_RECIPES = {
   "Nitrogen Gas":      { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
   "Uranium":           { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
   // Byproducts treated as raw inputs
-  "Petroleum Coke":    { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Heavy Oil Residue": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Compacted Coal":    { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Sulfuric Acid":     { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Petroleum Coke":            { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Heavy Oil Residue":         { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Compacted Coal":            { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Sulfuric Acid":             { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Fuel":                      { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Electromagnetic Control Rod":{ default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
 
   // ── Ingots ──
   "Iron Ingot": {
@@ -370,7 +372,8 @@ const ALL_RECIPES = {
     "Cheap Silica":{ machine: "Assembler",  raw: false, time: 8, inputs: [["Raw Quartz",3],["Limestone",5]],    output: 7, rate: 52.5, power: 15 },
   },
   "Rubber": {
-    default: { machine: "Refinery", raw: false, time: 6, inputs: [["Crude Oil",3]], output: 2, rate: 20, power: 30 },
+    default:          { machine: "Refinery", raw: false, time: 6,  inputs: [["Crude Oil",3]],           output: 2,  rate: 20, power: 30 },
+    "Recycled Rubber":{ machine: "Refinery", raw: false, time: 12, inputs: [["Plastic",6],["Fuel",6]],  output: 12, rate: 60, power: 30 },
   },
   "Quartz Crystal": {
     default:              { machine: "Constructor", raw: false, time: 8,  inputs: [["Raw Quartz",5]],                    output: 3,  rate: 22.5, power: 4  },
@@ -409,7 +412,7 @@ const ALL_RECIPES = {
     "Molded Steel Pipe":{ machine: "Foundry",    raw: false, time: 6,  inputs: [["Steel Ingot",5],["Concrete",3]],   output: 5, rate: 50, power: 16, tier: "A" },
   },
   "Encased Industrial Beam": {
-    default:                   { machine: "Assembler", raw: false, time: 10, inputs: [["Steel Beam",3],["Concrete",5]], output: 1, rate: 6, power: 15 },
+    default:                   { machine: "Assembler", raw: false, time: 10, inputs: [["Steel Beam",3],["Concrete",6]], output: 1, rate: 6, power: 15 },
     "Encased Industrial Pipe": { machine: "Assembler", raw: false, time: 15, inputs: [["Steel Pipe",6],["Concrete",5]], output: 1, rate: 4, power: 15 },
   },
   "Stator": {
@@ -417,8 +420,9 @@ const ALL_RECIPES = {
     "Quickwire Stator":{ machine: "Assembler", raw: false, time: 15, inputs: [["Steel Pipe",4],["Quickwire",15]],output: 2, rate: 8, power: 15 },
   },
   "Motor": {
-    default:      { machine: "Assembler",    raw: false, time: 12, inputs: [["Rotor",2],["Stator",2]],                                   output: 1, rate: 5,   power: 15 },
-    "Rigor Motor":{ machine: "Manufacturer", raw: false, time: 48, inputs: [["Rotor",3],["Stator",3],["Crystal Oscillator",1]],          output: 6, rate: 7.5, power: 55, tier: "A" },
+    default:        { machine: "Assembler",    raw: false, time: 12, inputs: [["Rotor",2],["Stator",2]],                                            output: 1, rate: 5,   power: 15 },
+    "Electric Motor":{ machine: "Assembler",  raw: false, time: 16, inputs: [["Electromagnetic Control Rod",1],["Rotor",2]],                       output: 2, rate: 7.5, power: 15 },
+    "Rigor Motor":  { machine: "Manufacturer", raw: false, time: 48, inputs: [["Rotor",3],["Stator",3],["Crystal Oscillator",1]],                  output: 6, rate: 7.5, power: 55, tier: "A" },
   },
   "Crystal Oscillator": {
     default:                       { machine: "Manufacturer", raw: false, time: 120, inputs: [["Quartz Crystal",36],["Cable",28],["Reinforced Iron Plate",5]], output: 2, rate: 1,     power: 55 },
@@ -431,7 +435,8 @@ const ALL_RECIPES = {
 
   // ── Advanced parts ──
   "Plastic": {
-    default: { machine: "Refinery", raw: false, time: 6, inputs: [["Crude Oil",3]], output: 2, rate: 20, power: 30 },
+    default:           { machine: "Refinery", raw: false, time: 6,  inputs: [["Crude Oil",3]],          output: 2,  rate: 20, power: 30 },
+    "Recycled Plastic":{ machine: "Refinery", raw: false, time: 12, inputs: [["Rubber",6],["Fuel",6]],  output: 12, rate: 60, power: 30 },
   },
   "Circuit Board": {
     default:                  { machine: "Assembler", raw: false, time: 8,  inputs: [["Copper Sheet",2],["Plastic",4]],          output: 1, rate: 7.5,  power: 15 },
@@ -440,16 +445,16 @@ const ALL_RECIPES = {
     "Silicon Circuit Board":  { machine: "Assembler", raw: false, time: 24, inputs: [["Copper Sheet",11],["Silica",11]],         output: 5, rate: 12.5, power: 15 },
   },
   "AI Limiter": {
-    default:              { machine: "Assembler", raw: false, time: 12, inputs: [["Circuit Board",5],["Quickwire",24]], output: 1, rate: 5, power: 15 },
-    "Plastic AI Limiter": { machine: "Assembler", raw: false, time: 15, inputs: [["Quickwire",30],["Plastic",7]],      output: 2, rate: 8, power: 15 },
+    default:              { machine: "Assembler", raw: false, time: 12, inputs: [["Copper Sheet",5],["Quickwire",20]], output: 1, rate: 5, power: 15 },
+    "Plastic AI Limiter": { machine: "Assembler", raw: false, time: 15, inputs: [["Quickwire",30],["Plastic",7]],     output: 2, rate: 8, power: 15 },
   },
   "Computer": {
-    default:             { machine: "Manufacturer", raw: false, time: 24, inputs: [["Circuit Board",10],["Cable",9],["Plastic",18],["Screw",52]], output: 1, rate: 2.5,  power: 55 },
+    default:             { machine: "Manufacturer", raw: false, time: 24, inputs: [["Circuit Board",4],["Cable",8],["Plastic",16]], output: 1, rate: 2.5,  power: 55 },
     "Caterium Computer": { machine: "Manufacturer", raw: false, time: 16, inputs: [["Circuit Board",4],["Quickwire",14],["Rubber",6]],            output: 1, rate: 3.75,      power: 55 },
     "Crystal Computer":  { machine: "Assembler",    raw: false, time: 36, inputs: [["Circuit Board",3],["Crystal Oscillator",1]],                output: 2, rate: 3.333333, power: 15 },
   },
   "Heavy Modular Frame": {
-    default:                { machine: "Manufacturer", raw: false, time: 30, inputs: [["Modular Frame",5],["Steel Pipe",15],["Encased Industrial Beam",5],["Screw",100]],        output: 1, rate: 2,      power: 55 },
+    default:                { machine: "Manufacturer", raw: false, time: 30, inputs: [["Modular Frame",5],["Steel Pipe",20],["Encased Industrial Beam",5],["Screw",120]],        output: 1, rate: 2,      power: 55 },
     "Heavy Encased Frame":  { machine: "Manufacturer", raw: false, time: 64, inputs: [["Modular Frame",8],["Encased Industrial Beam",10],["Steel Pipe",36],["Concrete",22]],     output: 3, rate: 2.8125,power: 55 },
     "Heavy Flexible Frame": { machine: "Manufacturer", raw: false, time: 16, inputs: [["Modular Frame",5],["Encased Industrial Beam",3],["Rubber",20],["Screw",104]],           output: 1, rate: 3.75,  power: 55 },
   },

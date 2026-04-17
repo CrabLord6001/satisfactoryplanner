@@ -281,62 +281,178 @@ const MACHINE_FP = {
 };
 
 const ALL_RECIPES = {
-  "Iron Ore": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Copper Ore": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Limestone": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Coal": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Caterium Ore": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Raw Quartz": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Sulfur": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Bauxite": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Crude Oil": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Water": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Nitrogen Gas": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
-  "Uranium": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  // ── Raw resources ──
+  "Iron Ore":          { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Copper Ore":        { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Limestone":         { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Coal":              { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Caterium Ore":      { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Raw Quartz":        { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Sulfur":            { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Bauxite":           { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Crude Oil":         { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Water":             { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Nitrogen Gas":      { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Uranium":           { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  // Byproducts treated as raw inputs
+  "Petroleum Coke":    { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Heavy Oil Residue": { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Compacted Coal":    { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+  "Sulfuric Acid":     { default: { machine: null, raw: true, rate: 0, time: 0, inputs: [], output: 1, power: 0 } },
+
+  // ── Ingots ──
   "Iron Ingot": {
-    default: { machine: "Smelter", raw: false, time: 2, inputs: [["Iron Ore",1]], output: 1, rate: 30, power: 4 },
-    "Pure Iron": { machine: "Refinery", raw: false, time: 12, inputs: [["Iron Ore",7],["Water",4]], output: 13, rate: 65, power: 30, tier: "S" },
+    default:             { machine: "Smelter",  raw: false, time: 2,  inputs: [["Iron Ore",1]],                      output: 1,  rate: 30,  power: 4  },
+    "Pure Iron":         { machine: "Refinery", raw: false, time: 12, inputs: [["Iron Ore",7],["Water",4]],           output: 13, rate: 65,  power: 30, tier: "S" },
+    "Basic Iron Ingot":  { machine: "Foundry",  raw: false, time: 12, inputs: [["Iron Ore",5],["Limestone",8]],      output: 10, rate: 50,  power: 16 },
+    "Iron Alloy Ingot":  { machine: "Foundry",  raw: false, time: 12, inputs: [["Iron Ore",8],["Copper Ore",2]],     output: 15, rate: 75,  power: 16 },
+    "Leached Iron Ingot":{ machine: "Refinery", raw: false, time: 6,  inputs: [["Iron Ore",5],["Sulfuric Acid",1]], output: 10, rate: 100, power: 30, tier: "S" },
   },
   "Copper Ingot": {
-    default: { machine: "Smelter", raw: false, time: 2, inputs: [["Copper Ore",1]], output: 1, rate: 30, power: 4 },
-    "Pure Copper": { machine: "Refinery", raw: false, time: 24, inputs: [["Copper Ore",6],["Water",4]], output: 15, rate: 37.5, power: 30, tier: "S" },
+    default:                 { machine: "Smelter",  raw: false, time: 2,  inputs: [["Copper Ore",1]],                              output: 1,  rate: 30,  power: 4  },
+    "Pure Copper":           { machine: "Refinery", raw: false, time: 24, inputs: [["Copper Ore",6],["Water",4]],                  output: 15, rate: 37.5,power: 30, tier: "S" },
+    "Copper Alloy Ingot":    { machine: "Foundry",  raw: false, time: 6,  inputs: [["Copper Ore",5],["Iron Ore",5]],               output: 10, rate: 100, power: 16, tier: "A" },
+    "Tempered Copper Ingot": { machine: "Foundry",  raw: false, time: 12, inputs: [["Copper Ore",5],["Petroleum Coke",8]],         output: 12, rate: 60,  power: 16 },
+    "Leached Copper Ingot":  { machine: "Refinery", raw: false, time: 12, inputs: [["Copper Ore",9],["Sulfuric Acid",5]],          output: 22, rate: 110, power: 30, tier: "S" },
   },
-  "Iron Plate": { default: { machine: "Constructor", raw: false, time: 6, inputs: [["Iron Ingot",3]], output: 2, rate: 20, power: 4 } },
+  "Caterium Ingot": {
+    default:                   { machine: "Smelter",  raw: false, time: 4,  inputs: [["Caterium Ore",3]],                          output: 1, rate: 15,   power: 4  },
+    "Pure Caterium Ingot":     { machine: "Refinery", raw: false, time: 5,  inputs: [["Caterium Ore",2],["Water",2]],              output: 1, rate: 12,   power: 30, tier: "S" },
+    "Tempered Caterium Ingot": { machine: "Foundry",  raw: false, time: 8,  inputs: [["Caterium Ore",6],["Petroleum Coke",2]],     output: 3, rate: 22.5, power: 16 },
+    "Leached Caterium Ingot":  { machine: "Refinery", raw: false, time: 10, inputs: [["Caterium Ore",9],["Sulfuric Acid",5]],      output: 6, rate: 36,   power: 30, tier: "A" },
+  },
+  "Steel Ingot": {
+    default:                { machine: "Foundry", raw: false, time: 4,  inputs: [["Iron Ore",3],["Coal",3]],                  output: 3,  rate: 45,  power: 16 },
+    "Solid Steel":          { machine: "Foundry", raw: false, time: 3,  inputs: [["Iron Ingot",2],["Coal",2]],                output: 3,  rate: 60,  power: 16, tier: "S" },
+    "Coke Steel Ingot":     { machine: "Foundry", raw: false, time: 12, inputs: [["Iron Ore",15],["Petroleum Coke",15]],      output: 20, rate: 100, power: 16 },
+    "Compacted Steel Ingot":{ machine: "Foundry", raw: false, time: 24, inputs: [["Iron Ore",2],["Compacted Coal",1]],        output: 4,  rate: 10,  power: 16 },
+  },
+
+  // ── Basic parts ──
+  "Iron Plate": {
+    default:            { machine: "Constructor", raw: false, time: 6, inputs: [["Iron Ingot",3]],                  output: 2,  rate: 20, power: 4  },
+    "Coated Iron Plate":{ machine: "Assembler",  raw: false, time: 8, inputs: [["Iron Ingot",5],["Plastic",1]],     output: 10, rate: 75, power: 15, tier: "A" },
+    "Steel Cast Plate": { machine: "Foundry",    raw: false, time: 4, inputs: [["Iron Ingot",1],["Steel Ingot",1]], output: 3,  rate: 45, power: 16 },
+  },
   "Iron Rod": {
-    default: { machine: "Constructor", raw: false, time: 4, inputs: [["Iron Ingot",1]], output: 1, rate: 15, power: 4 },
-    "Steel Rod": { machine: "Constructor", raw: false, time: 5, inputs: [["Steel Ingot",1]], output: 4, rate: 48, power: 4, tier: "A" },
+    default:    { machine: "Constructor", raw: false, time: 4, inputs: [["Iron Ingot",1]],  output: 1, rate: 15, power: 4 },
+    "Steel Rod":{ machine: "Constructor", raw: false, time: 5, inputs: [["Steel Ingot",1]], output: 4, rate: 48, power: 4, tier: "A" },
   },
-  "Wire": { default: { machine: "Constructor", raw: false, time: 4, inputs: [["Copper Ingot",1]], output: 2, rate: 30, power: 4 } },
-  "Cable": { default: { machine: "Constructor", raw: false, time: 2, inputs: [["Wire",2]], output: 1, rate: 30, power: 4 } },
-  "Concrete": { default: { machine: "Constructor", raw: false, time: 4, inputs: [["Limestone",3]], output: 1, rate: 15, power: 4 } },
+  "Wire": {
+    default:        { machine: "Constructor", raw: false, time: 4,  inputs: [["Copper Ingot",1]],                       output: 2,  rate: 30,  power: 4  },
+    "Iron Wire":    { machine: "Constructor", raw: false, time: 24, inputs: [["Iron Ingot",5]],                         output: 9,  rate: 22.5,power: 4  },
+    "Caterium Wire":{ machine: "Constructor", raw: false, time: 4,  inputs: [["Caterium Ingot",1]],                     output: 8,  rate: 120, power: 4,  tier: "S" },
+    "Fused Wire":   { machine: "Assembler",   raw: false, time: 20, inputs: [["Copper Ingot",4],["Caterium Ingot",1]], output: 30, rate: 90,  power: 15, tier: "A" },
+  },
+  "Cable": {
+    default:           { machine: "Constructor", raw: false, time: 2,  inputs: [["Wire",2]],                              output: 1,  rate: 30,   power: 4  },
+    "Coated Cable":    { machine: "Refinery",    raw: false, time: 8,  inputs: [["Wire",5],["Heavy Oil Residue",2]],      output: 9,  rate: 67.5, power: 30, tier: "S" },
+    "Insulated Cable": { machine: "Assembler",   raw: false, time: 12, inputs: [["Wire",9],["Rubber",6]],                 output: 20, rate: 100,  power: 15, tier: "A" },
+    "Quickwire Cable": { machine: "Assembler",   raw: false, time: 24, inputs: [["Quickwire",3],["Rubber",2]],            output: 11, rate: 27.5, power: 15 },
+  },
+  "Concrete": {
+    default:           { machine: "Constructor", raw: false, time: 4,  inputs: [["Limestone",3]],                     output: 1, rate: 15, power: 4  },
+    "Fine Concrete":   { machine: "Assembler",   raw: false, time: 12, inputs: [["Silica",3],["Limestone",12]],       output: 10,rate: 50, power: 15 },
+    "Rubber Concrete": { machine: "Assembler",   raw: false, time: 6,  inputs: [["Limestone",10],["Rubber",2]],       output: 9, rate: 90, power: 15 },
+    "Wet Concrete":    { machine: "Refinery",    raw: false, time: 3,  inputs: [["Limestone",6],["Water",5]],         output: 4, rate: 80, power: 30 },
+  },
   "Screw": {
-    default: { machine: "Constructor", raw: false, time: 6, inputs: [["Iron Rod",1]], output: 4, rate: 40, power: 4 },
+    default:       { machine: "Constructor", raw: false, time: 6,  inputs: [["Iron Rod",1]],   output: 4,  rate: 40,  power: 4 },
+    "Cast Screws": { machine: "Constructor", raw: false, time: 24, inputs: [["Iron Ingot",5]], output: 20, rate: 50,  power: 4 },
     "Steel Screw": { machine: "Constructor", raw: false, time: 12, inputs: [["Steel Beam",1]], output: 52, rate: 260, power: 4, tier: "S" },
   },
-  "Copper Sheet": { default: { machine: "Constructor", raw: false, time: 6, inputs: [["Copper Ingot",2]], output: 1, rate: 10, power: 4 } },
-  "Reinforced Iron Plate": { default: { machine: "Assembler", raw: false, time: 12, inputs: [["Iron Plate",6],["Screw",12]], output: 1, rate: 5, power: 15 } },
+  "Copper Sheet": {
+    default:                 { machine: "Constructor", raw: false, time: 6, inputs: [["Copper Ingot",2]],              output: 1, rate: 10,   power: 4  },
+    "Steamed Copper Sheet":  { machine: "Refinery",    raw: false, time: 8, inputs: [["Copper Ingot",3],["Water",3]], output: 3, rate: 22.5, power: 30 },
+  },
+  "Silica": {
+    default:       { machine: "Constructor", raw: false, time: 8, inputs: [["Raw Quartz",3]],                   output: 5, rate: 37.5, power: 4  },
+    "Cheap Silica":{ machine: "Assembler",  raw: false, time: 8, inputs: [["Raw Quartz",3],["Limestone",5]],    output: 7, rate: 52.5, power: 15 },
+  },
+  "Rubber": {
+    default: { machine: "Refinery", raw: false, time: 6, inputs: [["Crude Oil",3]], output: 2, rate: 20, power: 30 },
+  },
+  "Quartz Crystal": {
+    default:              { machine: "Constructor", raw: false, time: 8,  inputs: [["Raw Quartz",5]],                    output: 3,  rate: 22.5, power: 4  },
+    "Fused Quartz Crystal":{ machine: "Foundry",   raw: false, time: 20, inputs: [["Raw Quartz",25],["Coal",12]],        output: 18, rate: 54,   power: 16 },
+    "Pure Quartz Crystal": { machine: "Refinery",  raw: false, time: 8,  inputs: [["Raw Quartz",9],["Water",5]],         output: 7,  rate: 52.5, power: 30, tier: "A" },
+  },
+
+  // ── Mid-tier parts ──
+  "Reinforced Iron Plate": {
+    default:              { machine: "Assembler", raw: false, time: 12, inputs: [["Iron Plate",6],["Screw",12]],    output: 1, rate: 5,     power: 15 },
+    "Adhered Iron Plate": { machine: "Assembler", raw: false, time: 16, inputs: [["Iron Plate",3],["Rubber",1]],   output: 1, rate: 3.75,  power: 15 },
+    "Bolted Iron Plate":  { machine: "Assembler", raw: false, time: 12, inputs: [["Iron Plate",18],["Screw",50]], output: 3, rate: 15,    power: 15, tier: "A" },
+    "Stitched Iron Plate":{ machine: "Assembler", raw: false, time: 32, inputs: [["Iron Plate",10],["Wire",20]],   output: 3, rate: 5.625, power: 15 },
+  },
   "Rotor": {
-    default: { machine: "Assembler", raw: false, time: 15, inputs: [["Iron Rod",5],["Screw",25]], output: 1, rate: 4, power: 15 },
-    "Steel Rotor": { machine: "Assembler", raw: false, time: 12, inputs: [["Steel Pipe",2],["Wire",6]], output: 1, rate: 5, power: 15, tier: "S" },
+    default:        { machine: "Assembler", raw: false, time: 15, inputs: [["Iron Rod",5],["Screw",25]],        output: 1, rate: 4,     power: 15 },
+    "Copper Rotor": { machine: "Assembler", raw: false, time: 16, inputs: [["Copper Sheet",6],["Screw",52]],    output: 3, rate: 11.25, power: 15, tier: "A" },
+    "Steel Rotor":  { machine: "Assembler", raw: false, time: 12, inputs: [["Steel Pipe",2],["Wire",6]],        output: 1, rate: 5,     power: 15, tier: "S" },
   },
-  "Modular Frame": { default: { machine: "Assembler", raw: false, time: 60, inputs: [["Reinforced Iron Plate",3],["Iron Rod",12]], output: 2, rate: 2, power: 15 } },
-  "Smart Plating": { default: { machine: "Assembler", raw: false, time: 30, inputs: [["Reinforced Iron Plate",1],["Rotor",1]], output: 1, rate: 2, power: 15 } },
-  "Steel Ingot": {
-    default: { machine: "Foundry", raw: false, time: 4, inputs: [["Iron Ore",3],["Coal",3]], output: 3, rate: 45, power: 16 },
-    "Solid Steel": { machine: "Foundry", raw: false, time: 3, inputs: [["Iron Ingot",2],["Coal",2]], output: 3, rate: 60, power: 16, tier: "S" },
+  "Modular Frame": {
+    default:        { machine: "Assembler", raw: false, time: 60, inputs: [["Reinforced Iron Plate",3],["Iron Rod",12]],     output: 2, rate: 2, power: 15 },
+    "Bolted Frame": { machine: "Assembler", raw: false, time: 24, inputs: [["Reinforced Iron Plate",3],["Screw",56]],        output: 2, rate: 5, power: 15, tier: "A" },
+    "Steeled Frame":{ machine: "Assembler", raw: false, time: 60, inputs: [["Reinforced Iron Plate",2],["Steel Pipe",10]],   output: 3, rate: 3, power: 15 },
   },
-  "Steel Beam": { default: { machine: "Constructor", raw: false, time: 4, inputs: [["Steel Ingot",4]], output: 1, rate: 15, power: 4 } },
-  "Steel Pipe": { default: { machine: "Constructor", raw: false, time: 6, inputs: [["Steel Ingot",3]], output: 2, rate: 20, power: 4 } },
-  "Encased Industrial Beam": { default: { machine: "Assembler", raw: false, time: 10, inputs: [["Steel Beam",3],["Concrete",5]], output: 1, rate: 6, power: 15 } },
-  "Stator": { default: { machine: "Assembler", raw: false, time: 12, inputs: [["Steel Pipe",3],["Wire",8]], output: 1, rate: 5, power: 15 } },
-  "Motor": { default: { machine: "Assembler", raw: false, time: 12, inputs: [["Rotor",2],["Stator",2]], output: 1, rate: 5, power: 15 } },
-  "Caterium Ingot": { default: { machine: "Smelter", raw: false, time: 4, inputs: [["Caterium Ore",3]], output: 1, rate: 15, power: 4 } },
-  "Quickwire": { default: { machine: "Constructor", raw: false, time: 5, inputs: [["Caterium Ingot",1]], output: 5, rate: 60, power: 4 } },
-  "Plastic": { default: { machine: "Refinery", raw: false, time: 6, inputs: [["Crude Oil",3]], output: 2, rate: 20, power: 30 } },
-  "Circuit Board": { default: { machine: "Assembler", raw: false, time: 8, inputs: [["Copper Sheet",2],["Plastic",4]], output: 1, rate: 7.5, power: 15 } },
-  "AI Limiter": { default: { machine: "Assembler", raw: false, time: 12, inputs: [["Circuit Board",5],["Quickwire",24]], output: 1, rate: 5, power: 15 } },
-  "Computer": { default: { machine: "Manufacturer", raw: false, time: 24, inputs: [["Circuit Board",10],["Cable",9],["Plastic",18],["Screw",52]], output: 1, rate: 2.5, power: 55 } },
-  "Heavy Modular Frame": { default: { machine: "Manufacturer", raw: false, time: 30, inputs: [["Modular Frame",5],["Steel Pipe",15],["Encased Industrial Beam",5],["Screw",100]], output: 1, rate: 2, power: 55 } },
+  "Smart Plating": {
+    default:                { machine: "Assembler",     raw: false, time: 30, inputs: [["Reinforced Iron Plate",1],["Rotor",1]],                output: 1, rate: 2, power: 15 },
+    "Plastic Smart Plating":{ machine: "Manufacturer",  raw: false, time: 24, inputs: [["Reinforced Iron Plate",1],["Rotor",1],["Plastic",3]], output: 2, rate: 5, power: 55 },
+  },
+  "Steel Beam": {
+    default:      { machine: "Constructor", raw: false, time: 4,  inputs: [["Steel Ingot",4]],                  output: 1, rate: 15, power: 4  },
+    "Molded Beam":{ machine: "Foundry",    raw: false, time: 12, inputs: [["Steel Ingot",24],["Concrete",16]], output: 9, rate: 45, power: 16, tier: "A" },
+  },
+  "Steel Pipe": {
+    default:            { machine: "Constructor", raw: false, time: 6,  inputs: [["Steel Ingot",3]],                  output: 2, rate: 20, power: 4  },
+    "Iron Pipe":        { machine: "Constructor", raw: false, time: 12, inputs: [["Iron Ingot",20]],                  output: 5, rate: 25, power: 4  },
+    "Molded Steel Pipe":{ machine: "Foundry",    raw: false, time: 6,  inputs: [["Steel Ingot",5],["Concrete",3]],   output: 5, rate: 50, power: 16, tier: "A" },
+  },
+  "Encased Industrial Beam": {
+    default:                   { machine: "Assembler", raw: false, time: 10, inputs: [["Steel Beam",3],["Concrete",5]], output: 1, rate: 6, power: 15 },
+    "Encased Industrial Pipe": { machine: "Assembler", raw: false, time: 15, inputs: [["Steel Pipe",6],["Concrete",5]], output: 1, rate: 4, power: 15 },
+  },
+  "Stator": {
+    default:           { machine: "Assembler", raw: false, time: 12, inputs: [["Steel Pipe",3],["Wire",8]],      output: 1, rate: 5, power: 15 },
+    "Quickwire Stator":{ machine: "Assembler", raw: false, time: 15, inputs: [["Steel Pipe",4],["Quickwire",15]],output: 2, rate: 8, power: 15 },
+  },
+  "Motor": {
+    default:      { machine: "Assembler",    raw: false, time: 12, inputs: [["Rotor",2],["Stator",2]],                                   output: 1, rate: 5,   power: 15 },
+    "Rigor Motor":{ machine: "Manufacturer", raw: false, time: 48, inputs: [["Rotor",3],["Stator",3],["Crystal Oscillator",1]],          output: 6, rate: 7.5, power: 55, tier: "A" },
+  },
+  "Crystal Oscillator": {
+    default:                       { machine: "Manufacturer", raw: false, time: 120, inputs: [["Quartz Crystal",36],["Cable",28],["Reinforced Iron Plate",5]], output: 2, rate: 1,     power: 55 },
+    "Insulated Crystal Oscillator":{ machine: "Manufacturer", raw: false, time: 32,  inputs: [["Quartz Crystal",10],["Rubber",7],["AI Limiter",1]],            output: 1, rate: 1.875, power: 55 },
+  },
+  "Quickwire": {
+    default:          { machine: "Constructor", raw: false, time: 5, inputs: [["Caterium Ingot",1]],                       output: 5,  rate: 60, power: 4  },
+    "Fused Quickwire":{ machine: "Assembler",  raw: false, time: 8, inputs: [["Caterium Ingot",1],["Copper Ingot",5]],     output: 12, rate: 90, power: 15, tier: "A" },
+  },
+
+  // ── Advanced parts ──
+  "Plastic": {
+    default: { machine: "Refinery", raw: false, time: 6, inputs: [["Crude Oil",3]], output: 2, rate: 20, power: 30 },
+  },
+  "Circuit Board": {
+    default:                  { machine: "Assembler", raw: false, time: 8,  inputs: [["Copper Sheet",2],["Plastic",4]],          output: 1, rate: 7.5,  power: 15 },
+    "Caterium Circuit Board": { machine: "Assembler", raw: false, time: 48, inputs: [["Plastic",10],["Quickwire",30]],           output: 7, rate: 8.75, power: 15, tier: "A" },
+    "Electrode Circuit Board":{ machine: "Assembler", raw: false, time: 12, inputs: [["Rubber",4],["Petroleum Coke",8]],         output: 1, rate: 5,    power: 15 },
+    "Silicon Circuit Board":  { machine: "Assembler", raw: false, time: 24, inputs: [["Copper Sheet",11],["Silica",11]],         output: 5, rate: 12.5, power: 15 },
+  },
+  "AI Limiter": {
+    default:              { machine: "Assembler", raw: false, time: 12, inputs: [["Circuit Board",5],["Quickwire",24]], output: 1, rate: 5, power: 15 },
+    "Plastic AI Limiter": { machine: "Assembler", raw: false, time: 15, inputs: [["Quickwire",30],["Plastic",7]],      output: 2, rate: 8, power: 15 },
+  },
+  "Computer": {
+    default:             { machine: "Manufacturer", raw: false, time: 24, inputs: [["Circuit Board",10],["Cable",9],["Plastic",18],["Screw",52]], output: 1, rate: 2.5,  power: 55 },
+    "Caterium Computer": { machine: "Manufacturer", raw: false, time: 16, inputs: [["Circuit Board",4],["Quickwire",14],["Rubber",6]],            output: 1, rate: 3.75,      power: 55 },
+    "Crystal Computer":  { machine: "Assembler",    raw: false, time: 36, inputs: [["Circuit Board",3],["Crystal Oscillator",1]],                output: 2, rate: 3.333333, power: 15 },
+  },
+  "Heavy Modular Frame": {
+    default:                { machine: "Manufacturer", raw: false, time: 30, inputs: [["Modular Frame",5],["Steel Pipe",15],["Encased Industrial Beam",5],["Screw",100]],        output: 1, rate: 2,      power: 55 },
+    "Heavy Encased Frame":  { machine: "Manufacturer", raw: false, time: 64, inputs: [["Modular Frame",8],["Encased Industrial Beam",10],["Steel Pipe",36],["Concrete",22]],     output: 3, rate: 2.8125,power: 55 },
+    "Heavy Flexible Frame": { machine: "Manufacturer", raw: false, time: 16, inputs: [["Modular Frame",5],["Encased Industrial Beam",3],["Rubber",20],["Screw",104]],           output: 1, rate: 3.75,  power: 55 },
+  },
 };
 
 const getR = (it, ch) => ALL_RECIPES[it]?.[ch[it] || "default"] || ALL_RECIPES[it]?.default;

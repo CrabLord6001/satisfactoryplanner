@@ -670,6 +670,19 @@ function AchievementPage() {
   const [filter, setFilter]       = useState("all");
   const [catFilter, setCatFilter] = useState("all");
   const [hov, setHov]             = useState(null);
+  const [steamStatus, setSteamStatus] = useState("loading"); // "loading" | "synced" | "error"
+
+  useEffect(() => {
+    fetch("/api/achievements")
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) { setSteamStatus("error"); return; }
+        const unlockedNames = new Set(data.filter(a => a.achieved === 1).map(a => a.name));
+        setUnlocked(new Set(SATIS_ACHIEVEMENTS.filter(a => unlockedNames.has(a.name)).map(a => a.id)));
+        setSteamStatus("synced");
+      })
+      .catch(() => setSteamStatus("error"));
+  }, []);
 
   const toggle = id => setUnlocked(prev => {
     const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
@@ -696,7 +709,11 @@ function AchievementPage() {
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
               <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 4px", color: game.color }}>Achievement Tracker</h1>
-              <p style={{ fontSize: 11, color: T.dim, margin: 0, fontFamily: T.mono }}>Click any achievement to toggle completion</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                {steamStatus === "loading" && <span style={{ fontSize: 10, fontFamily: T.mono, color: T.dim }}>⏳ Syncing with Steam...</span>}
+                {steamStatus === "synced"  && <span style={{ fontSize: 10, fontFamily: T.mono, color: "#68d391" }}>✔ Live from Steam</span>}
+                {steamStatus === "error"   && <span style={{ fontSize: 10, fontFamily: T.mono, color: "#fc8181" }}>⚠ Steam sync failed — showing saved data</span>}
+              </div>
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 36, fontWeight: 800, fontFamily: T.mono, color: game.color, lineHeight: 1 }}>

@@ -492,7 +492,7 @@ function plannerLayout(root) {
   const flat = []; const walk = (n, d) => { flat.push({ ...n, d }); n.ch.forEach(c => walk(c, d + 1)); }; walk(root, 0);
   const byD = {}, MGAP = 8;
   flat.forEach(n => { (byD[n.d] = byD[n.d] || []).push(n); });
-  const maxD = Math.max(...Object.keys(byD).map(Number)), gapX = 16;
+  const maxD = Math.max(...Object.keys(byD).map(Number)), gapX = 16, gapY = 28;
   const pos = {};
   const nodeSize = (n) => {
     if (n.raw) return { w: 80, h: 40 };
@@ -500,11 +500,19 @@ function plannerLayout(root) {
     const mc = Math.ceil(n.mc), perRow = Math.min(mc, 4), rows = Math.ceil(mc / perRow);
     return { w: Math.max(perRow * fp.w * F + (perRow - 1) * MGAP + 20, 100), h: Math.max(rows * fp.l * F + (rows - 1) * MGAP + 32, 60) };
   };
+  const sizes = {}; flat.forEach(n => { sizes[n.id] = nodeSize(n); });
+  // Compute y-offset per depth based on actual max node heights so rows never overlap
+  const depthY = {}; let curY = 0;
+  for (let d = 0; d <= maxD; d++) {
+    depthY[d] = curY;
+    const maxH = Math.max(...(byD[d] || []).map(n => sizes[n.id].h));
+    curY += maxH + gapY;
+  }
   for (let d = maxD; d >= 0; d--) {
     const nodes = byD[d] || [];
-    nodes.forEach((n, i) => { const sz = nodeSize(n); const cp = n.ch.map(c => pos[c.id]).filter(Boolean);
+    nodes.forEach((n, i) => { const sz = sizes[n.id]; const cp = n.ch.map(c => pos[c.id]).filter(Boolean);
       let x = cp.length > 0 ? (Math.min(...cp.map(p => p.x)) + Math.max(...cp.map(p => p.x + p.w))) / 2 - sz.w / 2 : i * (sz.w + gapX);
-      pos[n.id] = { ...n, x, y: d * 200, ...sz }; });
+      pos[n.id] = { ...n, x, y: depthY[d], ...sz }; });
     const sorted = nodes.map(n => pos[n.id]).sort((a, b) => a.x - b.x);
     for (let i = 1; i < sorted.length; i++) { if (sorted[i].x < sorted[i - 1].x + sorted[i - 1].w + gapX) { sorted[i].x = sorted[i - 1].x + sorted[i - 1].w + gapX; pos[sorted[i].id] = sorted[i]; } }
   }
@@ -513,7 +521,7 @@ function plannerLayout(root) {
   return { nodes: all, edges, W: Math.max(...all.map(p => p.x + p.w)) + 20, H: Math.max(...all.map(p => p.y + p.h)) + 20 };
 }
 
-function MNode({ n, sel, onSel }) {
+function MNode({ n, sel, onSel, onDragStart }) {
   const c = n.raw ? MC.raw : (MC[n.machine] || MC.raw);
   const mc = Math.ceil(n.mc), fp = MACHINE_FP[n.machine], MGAP = 8;
   const cells = [];
@@ -530,7 +538,10 @@ function MNode({ n, sel, onSel }) {
     }
   }
   return (
-    <g transform={`translate(${n.x},${n.y})`} onClick={e => { e.stopPropagation(); onSel(n); }} style={{ cursor: "pointer" }}>
+    <g transform={`translate(${n.x},${n.y})`}
+       onMouseDown={e => { e.stopPropagation(); onDragStart(e, n); }}
+       onClick={e => { e.stopPropagation(); onSel(n); }}
+       style={{ cursor: "grab" }}>
       <rect width={n.w} height={n.h} rx={6} fill="#0d1117" stroke={sel === n.id ? "#fbbf24" : c.stroke} strokeWidth={sel === n.id ? 2 : 1} opacity={0.95} />
       {cells}
       <text x={n.w/2} y={12} textAnchor="middle" fill={c.text} fontSize={10} fontWeight={600} fontFamily="system-ui">{n.item.length > 20 ? n.item.slice(0,18)+".." : n.item}</text>
@@ -561,12 +572,29 @@ function PlannerPage() {
   const [zoom, setZoom] = useState(1);
   const [drag, setDrag] = useState(false);
   const [ds, setDs] = useState(null);
+  const [nodePositions, setNodePositions] = useState({});
+  const [draggingNode, setDraggingNode] = useState(null);
+  const [dnOffset, setDnOffset] = useState(null);
   const dRef = useRef(null);
+  const canvasRef = useRef(null);
+  const dragMovedRef = useRef(false);
 
   const craftable = useMemo(() => Object.entries(ALL_RECIPES).filter(([, r]) => !r.default.raw).map(([n]) => n).sort(), []);
   const filt = useMemo(() => craftable.filter(i => i.toLowerCase().includes(search.toLowerCase())), [search, craftable]);
   const tree = useMemo(() => { uid = 0; return buildTree(item, rate, ch); }, [item, rate, ch]);
   const lo = useMemo(() => tree ? plannerLayout(tree) : null, [tree]);
+
+  const mergedNodes = useMemo(() => {
+    if (!lo) return [];
+    return lo.nodes.map(n => nodePositions[n.id] ? { ...n, x: nodePositions[n.id].x, y: nodePositions[n.id].y } : n);
+  }, [lo, nodePositions]);
+
+  const mergedEdges = useMemo(() => {
+    if (!lo || !mergedNodes.length) return [];
+    const pm = {};
+    mergedNodes.forEach(n => { pm[n.id] = n; });
+    return lo.edges.map(e => ({ ...e, from: pm[e.from.id] ?? e.from, to: pm[e.to.id] ?? e.to }));
+  }, [lo, mergedNodes]);
 
   const totals = useMemo(() => {
     if (!tree) return null;
@@ -577,12 +605,33 @@ function PlannerPage() {
   }, [tree]);
 
   useEffect(() => { const h = e => { if (dRef.current && !dRef.current.contains(e.target)) setShowDrop(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
-  const pick = i => { setItem(i); setSearch(""); setShowDrop(false); setSel(null); setRate(ALL_RECIPES[i]?.default?.rate||1); setPan({x:20,y:20}); setZoom(1); };
+  const pick = i => { setItem(i); setSearch(""); setShowDrop(false); setSel(null); setRate(ALL_RECIPES[i]?.default?.rate||1); setPan({x:20,y:20}); setZoom(1); setNodePositions({}); };
   const onWheel = useCallback(e => { e.preventDefault(); setZoom(z => Math.max(0.08, Math.min(3, z * (e.deltaY>0?0.9:1.1)))); }, []);
   const md = e => { setDrag(true); setDs({x:e.clientX-pan.x,y:e.clientY-pan.y}); };
-  const mm = e => { if(drag&&ds) setPan({x:e.clientX-ds.x,y:e.clientY-ds.y}); };
-  const mu = () => { setDrag(false); setDs(null); };
-  useEffect(() => { if(lo) setZoom(Math.min(1, 680/(lo.W+40))); }, [lo]);
+  const mm = e => {
+    if (draggingNode && dnOffset && canvasRef.current) {
+      dragMovedRef.current = true;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const mx = (e.clientX - rect.left - pan.x) / zoom;
+      const my = (e.clientY - rect.top - pan.y) / zoom;
+      setNodePositions(prev => ({ ...prev, [draggingNode]: { x: mx - dnOffset.x, y: my - dnOffset.y } }));
+    } else if (drag && ds) {
+      setPan({x: e.clientX - ds.x, y: e.clientY - ds.y});
+    }
+  };
+  const mu = () => { setDrag(false); setDs(null); setDraggingNode(null); setDnOffset(null); };
+  const handleNodeDragStart = useCallback((e, n) => {
+    if (!canvasRef.current) return;
+    dragMovedRef.current = false;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left - pan.x) / zoom;
+    const my = (e.clientY - rect.top - pan.y) / zoom;
+    const nx = nodePositions[n.id]?.x ?? n.x;
+    const ny = nodePositions[n.id]?.y ?? n.y;
+    setDraggingNode(n.id);
+    setDnOffset({ x: mx - nx, y: my - ny });
+  }, [pan, zoom, nodePositions]);
+  useEffect(() => { if(lo) { setZoom(Math.min(1, 680/(lo.W+40))); setNodePositions({}); } }, [lo]);
   const toggleR = (it,rn) => setCh(p => ({...p,[it]:(p[it]||"default")===rn?"default":rn}));
 
   return (
@@ -611,6 +660,7 @@ function PlannerPage() {
               style={{ width: "100%", padding: "7px 10px", background: "#151b2b", border: "1px solid #2d3748", borderRadius: 6, color: "#fbbf24", fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
           <button onClick={() => { setCh({}); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset</button>
+          <button onClick={() => { setNodePositions({}); setPan({ x: 20, y: 20 }); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Layout</button>
         </div>
 
         {totals && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 6, marginBottom: 8 }}>
@@ -628,7 +678,7 @@ function PlannerPage() {
       </div>
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 16px" }}>
-        <div style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: drag?"grabbing":"grab" }}
+        <div ref={canvasRef} style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: draggingNode ? "grabbing" : drag ? "grabbing" : "grab" }}
           onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu} onClick={() => setSel(null)}>
           <svg width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
             <defs><pattern id="fg" width={F} height={F} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x%(F*zoom)},${pan.y%(F*zoom)}) scale(${zoom})`}>
@@ -639,8 +689,8 @@ function PlannerPage() {
             <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <path d="M1 2L8 5L1 8" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" /></marker></defs>
             <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
-              {lo.edges.map((e,i) => <PEdge key={i} e={e} />)}
-              {lo.nodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => { n.hasAlts ? setSel(n.id) : setSel(null); }} />)}
+              {mergedEdges.map((e,i) => <PEdge key={i} e={e} />)}
+              {mergedNodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => { n.hasAlts ? setSel(n.id) : setSel(null); }} onDragStart={handleNodeDragStart} />)}
             </g>
           </svg>}
           <div style={{ position: "absolute", bottom: 6, right: 8, color: "#3a5570", fontSize: 9, fontFamily: "monospace" }}>{(zoom*100).toFixed(0)}%</div>

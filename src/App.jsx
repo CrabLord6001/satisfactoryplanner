@@ -139,7 +139,7 @@ function GameCard({ gameKey, game }) {
       }} />
       {game.logo ? (
         <img src={game.logo} alt={game.title}
-          style={{ width: "100%", display: "block", objectFit: "cover" }}
+          style={{ width: "100%", maxHeight: 160, display: "block", objectFit: "cover", objectPosition: "center" }}
           draggable={false}
         />
       ) : (
@@ -546,17 +546,14 @@ function MNode({ n, sel, onSel, onDragStart, rotation }) {
   const c = n.raw ? MC.raw : (MC[n.machine] || MC.raw);
   const mc = Math.ceil(n.mc), MGAP = 8;
   const rot = rotation || 0;
-
-  // Swap footprint dims when rotated 90/270
-  const fp0 = MACHINE_FP[n.machine];
-  const fp = fp0 && (rot === 90 || rot === 270) ? { w: fp0.l, h: fp0.w, l: fp0.w } : fp0;
+  const fp = MACHINE_FP[n.machine];
 
   const cells = [];
   const manifoldLines = [];
 
   if (fp && !n.raw) {
     const perRow = Math.min(mc, 4), rows = Math.ceil(mc / perRow);
-    const mW = fp.w * F, mH = (fp.l || fp.h || fp.w) * F;
+    const mW = fp.w * F, mH = fp.l * F;
     const gridW = perRow * mW + (perRow - 1) * MGAP;
     const ox = (n.w - gridW) / 2, oy = 26;
 
@@ -564,7 +561,6 @@ function MNode({ n, sel, onSel, onDragStart, rotation }) {
       const inRow = r < rows - 1 ? perRow : mc - r * perRow;
       const rowX0 = ox;
       const rowX1 = ox + (inRow - 1) * (mW + MGAP) + mW;
-      const midY = oy + r * (mH + MGAP) + mH / 2;
 
       for (let m = 0; m < inRow; m++) {
         const mx0 = ox + m * (mW + MGAP), my0 = oy + r * (mH + MGAP);
@@ -574,25 +570,17 @@ function MNode({ n, sel, onSel, onDragStart, rotation }) {
         cells.push(<text key={`l-${r}-${m}`} x={mx0+mW/2} y={my0+mH/2} textAnchor="middle" dominantBaseline="central" fill={c.text} fontSize={9} fontFamily="monospace" fontWeight={600} opacity={0.55}>{n.machine?.charAt(0)}</text>);
       }
 
-      // Manifold belt line when multiple machines in this row
+      // Manifold belt lines when multiple machines in a row
       if (inRow > 1) {
-        // Input belt (top of machines in this row)
-        const beltY = oy + r * (mH + MGAP) - 5;
+        const beltTopY = oy + r * (mH + MGAP) - 5;
+        const beltBotY = oy + r * (mH + MGAP) + mH + 1;
         manifoldLines.push(
           <g key={`belt-${r}`}>
-            {/* Input manifold belt */}
-            <rect x={rowX0} y={beltY - 3} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.55} />
-            {/* Output manifold belt */}
-            <rect x={rowX0} y={oy + r * (mH + MGAP) + mH + 1} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.35} />
-            {/* Drop lines from belt to each machine */}
+            <rect x={rowX0} y={beltTopY} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.55} />
+            <rect x={rowX0} y={beltBotY} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.35} />
             {Array.from({ length: inRow }, (_, m) => {
-              const mx0 = ox + m * (mW + MGAP);
-              return (
-                <line key={`drop-${m}`}
-                  x1={mx0 + mW/2} y1={beltY - 3}
-                  x2={mx0 + mW/2} y2={oy + r * (mH + MGAP)}
-                  stroke={c.stroke} strokeWidth={1.5} strokeDasharray="2,2" opacity={0.5} />
-              );
+              const cx0 = ox + m * (mW + MGAP) + mW / 2;
+              return <line key={`drop-${m}`} x1={cx0} y1={beltTopY + 4} x2={cx0} y2={oy + r * (mH + MGAP)} stroke={c.stroke} strokeWidth={1.5} strokeDasharray="2,2" opacity={0.5} />;
             })}
           </g>
         );
@@ -600,17 +588,25 @@ function MNode({ n, sel, onSel, onDragStart, rotation }) {
     }
   }
 
+  // Rotate cells grid around node center; labels stay horizontal
+  const cx = n.w / 2, cy = n.h / 2;
+
   return (
     <g transform={`translate(${n.x},${n.y})`}
        onMouseDown={e => { e.stopPropagation(); onDragStart(e, n); }}
        onClick={e => { e.stopPropagation(); onSel(n); }}
        style={{ cursor: "grab" }}>
       <rect width={n.w} height={n.h} rx={6} fill="#0d1117" stroke={sel === n.id ? "#fbbf24" : c.stroke} strokeWidth={sel === n.id ? 2 : 1} opacity={0.95} />
-      {manifoldLines}
-      {cells}
-      <text x={n.w/2} y={12} textAnchor="middle" fill={c.text} fontSize={10} fontWeight={600} fontFamily="system-ui">{n.item.length > 20 ? n.item.slice(0,18)+".." : n.item}</text>
-      {n.raw ? <text x={n.w/2} y={n.h-6} textAnchor="middle" fill="#68d391" fontSize={9} fontFamily="monospace">{n.rate.toFixed(1)}/min</text>
-        : <text x={n.w/2} y={n.h-6} textAnchor="middle" fill="#a0aec0" fontSize={8} fontFamily="monospace">
+      {/* Machine cells — rotate around node center */}
+      <g transform={rot ? `rotate(${rot},${cx},${cy})` : undefined}>
+        {manifoldLines}
+        {cells}
+      </g>
+      {/* Labels always stay horizontal */}
+      <text x={cx} y={12} textAnchor="middle" fill={c.text} fontSize={10} fontWeight={600} fontFamily="system-ui">{n.item.length > 20 ? n.item.slice(0,18)+".." : n.item}</text>
+      {n.raw
+        ? <text x={cx} y={n.h-6} textAnchor="middle" fill="#68d391" fontSize={9} fontFamily="monospace">{n.rate.toFixed(1)}/min</text>
+        : <text x={cx} y={n.h-6} textAnchor="middle" fill="#a0aec0" fontSize={8} fontFamily="monospace">
             <tspan fill={c.text}>{n.rate.toFixed(1)}/m</tspan><tspan fill="#4a5568"> · </tspan><tspan fill="#fbbf24">x{mc}</tspan><tspan fill="#4a5568"> · </tspan><tspan fill="#fc8181">{n.pw.toFixed(0)}MW</tspan>
           </text>}
     </g>
@@ -675,98 +671,78 @@ function PlannerPage() {
 
   useEffect(() => { const h = e => { if (dRef.current && !dRef.current.contains(e.target)) setShowDrop(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
 
-  // Keep touchStateRef always current so the touch handlers (which are registered once) can read latest values
-  touchStateRef.current = { pan, zoom, mergedNodes, nodePositions };
+  // ── Touch helpers (React synthetic events, touchAction:none handles scroll prevention) ──
+  const getCanvasPos = useCallback((clientX, clientY) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return { x: (clientX - rect.left - pan.x) / zoom, y: (clientY - rect.top - pan.y) / zoom };
+  }, [pan, zoom]);
 
-  // Touch support: drag nodes, pan canvas, pinch-to-zoom
-  // Must be non-passive to call e.preventDefault() and suppress page scroll
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const hitTestNode = useCallback((x, y) => {
+    return mergedNodes.find(n => x >= n.x && x <= n.x + n.w && y >= n.y && y <= n.y + n.h) || null;
+  }, [mergedNodes]);
 
-    const getCanvasPos = (clientX, clientY) => {
-      const rect = canvas.getBoundingClientRect();
-      const { pan, zoom } = touchStateRef.current;
-      return { x: (clientX - rect.left - pan.x) / zoom, y: (clientY - rect.top - pan.y) / zoom };
-    };
-
-    const hitTestNode = (x, y) => {
-      const { mergedNodes } = touchStateRef.current;
-      return (mergedNodes || []).find(n => x >= n.x && x <= n.x + n.w && y >= n.y && y <= n.y + n.h) || null;
-    };
-
-    const onTouchStart = e => {
-      e.preventDefault();
-      if (e.touches.length === 1) {
-        const t = e.touches[0];
-        const pos = getCanvasPos(t.clientX, t.clientY);
-        const node = hitTestNode(pos.x, pos.y);
-        if (node) {
-          dragMovedRef.current = false;
-          const { nodePositions } = touchStateRef.current;
-          const nx = nodePositions[node.id]?.x ?? node.x;
-          const ny = nodePositions[node.id]?.y ?? node.y;
-          draggingNodeRef.current = node.id;
-          dnOffsetRef.current = { x: pos.x - nx, y: pos.y - ny };
-          setDraggingNode(node.id);
-          touchGestureRef.current = { type: 'node' };
-        } else {
-          const { pan } = touchStateRef.current;
-          panTouchRef.current = { x: t.clientX - pan.x, y: t.clientY - pan.y };
-          touchGestureRef.current = { type: 'pan' };
-        }
-      } else if (e.touches.length === 2) {
-        draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
-        setDraggingNode(null);
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        touchGestureRef.current = { type: 'pinch', startDist: Math.hypot(dx, dy), startZoom: touchStateRef.current.zoom };
-      }
-    };
-
-    const onTouchMove = e => {
-      e.preventDefault();
-      if (e.touches.length === 1) {
-        const t = e.touches[0];
-        if (draggingNodeRef.current && dnOffsetRef.current) {
-          dragMovedRef.current = true;
-          const pos = getCanvasPos(t.clientX, t.clientY);
-          setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: pos.x - dnOffsetRef.current.x, y: pos.y - dnOffsetRef.current.y } }));
-        } else if (panTouchRef.current) {
-          setPan({ x: t.clientX - panTouchRef.current.x, y: t.clientY - panTouchRef.current.y });
-        }
-      } else if (e.touches.length === 2 && touchGestureRef.current?.type === 'pinch') {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const { startDist, startZoom } = touchGestureRef.current;
-        setZoom(Math.max(0.08, Math.min(3, startZoom * (Math.hypot(dx, dy) / startDist))));
-      }
-    };
-
-    const onTouchEnd = e => {
-      e.preventDefault();
-      if (e.touches.length === 0) {
-        draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
-        setDraggingNode(null); touchGestureRef.current = null;
-      } else if (e.touches.length === 1) {
-        // Dropped from 2 fingers to 1 — switch to pan
-        const t = e.touches[0];
-        const { pan } = touchStateRef.current;
+  const handleTouchStart = useCallback(e => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      const pos = getCanvasPos(t.clientX, t.clientY);
+      const node = hitTestNode(pos.x, pos.y);
+      dragMovedRef.current = false;
+      if (node) {
+        const nx = nodePositions[node.id]?.x ?? node.x;
+        const ny = nodePositions[node.id]?.y ?? node.y;
+        draggingNodeRef.current = node.id;
+        dnOffsetRef.current = { x: pos.x - nx, y: pos.y - ny };
+        setDraggingNode(node.id);
+        touchGestureRef.current = { type: 'node' };
+      } else {
         panTouchRef.current = { x: t.clientX - pan.x, y: t.clientY - pan.y };
-        draggingNodeRef.current = null; dnOffsetRef.current = null;
-        setDraggingNode(null); touchGestureRef.current = { type: 'pan' };
+        touchGestureRef.current = { type: 'pan' };
       }
-    };
+    } else if (e.touches.length === 2) {
+      draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
+      setDraggingNode(null);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchGestureRef.current = { type: 'pinch', startDist: Math.hypot(dx, dy), startZoom: zoom };
+    }
+  }, [getCanvasPos, hitTestNode, nodePositions, pan, zoom]);
 
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
-    return () => {
-      canvas.removeEventListener('touchstart', onTouchStart);
-      canvas.removeEventListener('touchmove', onTouchMove);
-      canvas.removeEventListener('touchend', onTouchEnd);
-    };
-  }, []); // intentionally empty — handlers read live values via touchStateRef
+  const handleTouchMove = useCallback(e => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      if (draggingNodeRef.current && dnOffsetRef.current) {
+        dragMovedRef.current = true;
+        const pos = getCanvasPos(t.clientX, t.clientY);
+        setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: pos.x - dnOffsetRef.current.x, y: pos.y - dnOffsetRef.current.y } }));
+      } else if (panTouchRef.current) {
+        setPan({ x: t.clientX - panTouchRef.current.x, y: t.clientY - panTouchRef.current.y });
+      }
+    } else if (e.touches.length === 2 && touchGestureRef.current?.type === 'pinch') {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const { startDist, startZoom } = touchGestureRef.current;
+      setZoom(Math.max(0.08, Math.min(3, startZoom * (Math.hypot(dx, dy) / startDist))));
+    }
+  }, [getCanvasPos]);
+
+  const handleTouchEnd = useCallback(e => {
+    if (e.touches.length === 0) {
+      // All fingers lifted — if no drag occurred and was on a node, treat as a tap (select)
+      if (!dragMovedRef.current && draggingNodeRef.current) {
+        const nodeId = draggingNodeRef.current;
+        setSel(s => s === nodeId ? null : nodeId);
+      }
+      draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
+      setDraggingNode(null); touchGestureRef.current = null;
+    } else if (e.touches.length === 1) {
+      // Dropped from 2 fingers to 1 — switch to pan
+      const t = e.touches[0];
+      panTouchRef.current = { x: t.clientX - pan.x, y: t.clientY - pan.y };
+      draggingNodeRef.current = null; dnOffsetRef.current = null;
+      setDraggingNode(null); touchGestureRef.current = { type: 'pan' };
+    }
+  }, [pan]);
 
   const pick = i => { setItem(i); setSearch(""); setShowDrop(false); setSel(null); setRate(ALL_RECIPES[i]?.default?.rate||1); setPan({x:20,y:20}); setZoom(1); setNodePositions({}); setNodeRotations({}); };
   const onWheel = useCallback(e => { e.preventDefault(); setZoom(z => Math.max(0.08, Math.min(3, z * (e.deltaY>0?0.9:1.1)))); }, []);
@@ -844,7 +820,9 @@ function PlannerPage() {
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 16px" }}>
         <div ref={canvasRef} style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: draggingNode ? "grabbing" : drag ? "grabbing" : "grab", touchAction: "none", userSelect: "none" }}
-          onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu} onClick={() => setSel(null)}>
+          onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu}
+          onClick={e => { if (!dragMovedRef.current) setSel(null); }}
+          onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
           <svg width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
             <defs><pattern id="fg" width={F} height={F} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x%(F*zoom)},${pan.y%(F*zoom)}) scale(${zoom})`}>
               <rect width={F} height={F} fill="none" stroke="#161e2c" strokeWidth="0.5" /></pattern></defs>

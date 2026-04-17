@@ -38,7 +38,7 @@ const GAMES = {
     hours: "500+",
     tools: [
       { name: "Production Planner", desc: "Visual flowchart with foundation footprints, alt recipes, and Somersloop support", route: "satisfactory/planner", icon: "⚙️", ready: true },
-      { name: "Achievement Tracker", desc: "Keeping track of what I still need to unlock", route: "satisfactory/achievements", icon: "🏆", ready: false },
+      { name: "Achievement Tracker", desc: "Keeping track of what I still need to unlock", route: "satisfactory/achievements", icon: "🏆", ready: true },
       { name: "Recipe Database", desc: "All recipes with alt recipe tier ratings", route: "satisfactory/recipes", icon: "📖", ready: false },
     ],
     tips: [
@@ -182,7 +182,6 @@ function GameCard({ gameKey, game }) {
           <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 800, fontFamily: T.font, color: game.color }}>{game.title}</h2>
           <span style={{ fontSize: 10, fontFamily: T.mono, color: T.dim, letterSpacing: "0.05em" }}>{game.genre}</span>
         </div>
-        <span style={{ fontSize: 11, fontFamily: T.mono, color: game.color, opacity: 0.7 }}>{game.hours} hrs</span>
       </div>
       <p style={{ margin: "0 0 14px", fontSize: 12, color: T.dim, lineHeight: 1.6 }}>{game.tagline}</p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -239,7 +238,6 @@ function HomePage() {
             { label: "Games covered", val: "3", col: T.accent },
             { label: "Tools built", val: "1", col: "#22d3ee" },
             { label: "Coming soon", val: "8", col: "#a855f7" },
-            { label: "Hours played", val: "1,300+", col: "#fbbf24" },
           ].map(s => (
             <div key={s.label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 800, fontFamily: T.mono, color: s.col }}>{s.val}</div>
@@ -270,7 +268,6 @@ function GameLander({ gameKey }) {
           <p style={{ fontSize: 16, fontFamily: T.font, color: T.text, margin: "0 0 6px", fontWeight: 500 }}>{game.tagline}</p>
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
             <span style={{ fontSize: 10, fontFamily: T.mono, color: T.dim, background: game.colorDim, padding: "3px 10px", borderRadius: 4 }}>{game.genre}</span>
-            <span style={{ fontSize: 10, fontFamily: T.mono, color: T.dim }}>{game.hours} hours played</span>
           </div>
           <p style={{ fontSize: 13, color: T.dim, lineHeight: 1.7, maxWidth: 700, margin: 0 }}>{game.desc}</p>
         </div>
@@ -592,12 +589,246 @@ function PlannerPage() {
   );
 }
 
+// ─── ACHIEVEMENT DATA (Satisfactory) ───
+const ACH_CATS = [
+  { key: "progression", label: "Progression", icon: "🚀" },
+  { key: "building",    label: "Building",    icon: "🏗️" },
+  { key: "exploration", label: "Exploration", icon: "🗺️" },
+  { key: "creatures",   label: "Creatures",   icon: "🦎" },
+  { key: "resources",   label: "Resources",   icon: "⛏️" },
+  { key: "research",    label: "Research",    icon: "🔬" },
+  { key: "misc",        label: "Misc & Fun",  icon: "🎯" },
+];
+
+const ACH_DIFF = {
+  easy:    { label: "Easy",   color: "#68d391", bg: "rgba(104,211,145,0.1)" },
+  medium:  { label: "Medium", color: "#63b3ed", bg: "rgba(99,179,237,0.1)"  },
+  hard:    { label: "Hard",   color: "#fc8181", bg: "rgba(252,129,129,0.1)" },
+  unknown: { label: "???",    color: "#9ca3af", bg: "rgba(156,163,175,0.1)" },
+};
+
+const ACH_CAT_ICON = { progression:"🚀", building:"🏗️", exploration:"🗺️", creatures:"🦎", resources:"⛏️", research:"🔬", misc:"🎯" };
+
+const SATIS_ACHIEVEMENTS = [
+  // Progression
+  { id:1,  cat:"progression", name:"Commencing Project Assembly",          desc:"Build the Space Elevator.",                                    unlocked:true,  diff:"easy"   },
+  { id:2,  cat:"progression", name:"Mediocre pioneering",                  desc:"Complete Phase 1 of the Space Elevator.",                     unlocked:true,  diff:"easy"   },
+  { id:3,  cat:"progression", name:"Adequate pioneering",                  desc:"Complete Phase 2 of the Space Elevator.",                     unlocked:true,  diff:"easy"   },
+  { id:4,  cat:"progression", name:"Pretty good pioneering",               desc:"Complete Phase 3 of the Space Elevator.",                     unlocked:false, diff:"medium", prog:[0,1]    },
+  { id:5,  cat:"progression", name:"Efficient pioneering",                 desc:"Complete Phase 4 of the Space Elevator.",                     unlocked:false, diff:"hard",   prog:[0,1]    },
+  { id:6,  cat:"progression", name:"Saved the Day, probably",              desc:"Complete Phase 5 of the Space Elevator and finish the game.", unlocked:false, diff:"hard",   prog:[0,1]    },
+  { id:7,  cat:"progression", name:"Bigger. Better. FICSIT.",              desc:"Build your first Manufacturer.",                              unlocked:true,  diff:"medium" },
+  { id:8,  cat:"progression", name:"Efficiency first",                     desc:"Unlock all Milestones.",                                      unlocked:false, diff:"hard",   prog:[27,42]  },
+  // Building
+  { id:9,  cat:"building",    name:"A Concrete Example",                   desc:"Build 5000 Foundations.",                                     unlocked:true,  diff:"medium" },
+  { id:10, cat:"building",    name:"Spaghetti master",                     desc:"Build 5 km of Conveyor Belts.",                               unlocked:true,  diff:"easy"   },
+  { id:11, cat:"building",    name:"Pipe dream",                           desc:"Build 5 km of Pipelines.",                                    unlocked:true,  diff:"medium" },
+  { id:12, cat:"building",    name:"Railroad tycoon",                      desc:"Build 5 km of Railway.",                                      unlocked:true,  diff:"medium" },
+  { id:13, cat:"building",    name:"All aboard!",                          desc:"Set up a train schedule.",                                    unlocked:true,  diff:"medium" },
+  // Exploration
+  { id:14, cat:"exploration", name:"Let's see what's out there",           desc:"Visit each starting area biome once.",                        unlocked:true,  diff:"easy"   },
+  { id:15, cat:"exploration", name:"New fear unlocked",                    desc:"Fix blown fuse.",                                             unlocked:true,  diff:"easy"   },
+  { id:16, cat:"exploration", name:"Peak gameplay",                        desc:"Reach the highest cliff in the world.",                       unlocked:false, diff:"medium", prog:[0,1]    },
+  { id:17, cat:"exploration", name:"What a thrill",                        desc:"Reach the maximum world height.",                             unlocked:false, diff:"hard",   prog:[0,1]    },
+  // Creatures
+  { id:18, cat:"creatures",   name:"Wheeeee!",                             desc:"Bounce on a Space Giraffe Tick Penguin Thing.",               unlocked:true,  diff:"easy"   },
+  { id:19, cat:"creatures",   name:"Establish dominance",                  desc:"Hit a creature with a vehicle.",                              unlocked:true,  diff:"easy"   },
+  { id:20, cat:"creatures",   name:"Wait, you can pet it?",                desc:"Pet the flying Manta.",                                       unlocked:true,  diff:"medium" },
+  { id:21, cat:"creatures",   name:"Pioneer's best friend",                desc:"Tame a Lizard Doggo.",                                        unlocked:true,  diff:"easy"   },
+  { id:22, cat:"creatures",   name:"Varied diet",                          desc:"Gather all three types of edible flora.",                     unlocked:true,  diff:"easy"   },
+  { id:23, cat:"creatures",   name:"Look both ways next time",             desc:"Get knocked over by a vehicle.",                              unlocked:false, diff:"easy",   prog:[0,1]    },
+  // Resources
+  { id:24, cat:"resources",   name:"Yoink!",                               desc:"Gather a Power Slug.",                                        unlocked:true,  diff:"easy"   },
+  { id:25, cat:"resources",   name:"Caught them all",                      desc:"Gather all three Power Slug types.",                          unlocked:true,  diff:"easy"   },
+  { id:26, cat:"resources",   name:"I'm sure these play a Critical Role",  desc:"Gather a Mercer Sphere.",                                     unlocked:true,  diff:"easy"   },
+  { id:27, cat:"resources",   name:"Oddly familiar",                       desc:"Gather a Somersloop.",                                        unlocked:true,  diff:"easy"   },
+  { id:28, cat:"resources",   name:"Rock and stone!",                      desc:"Place down a Portable Miner.",                                unlocked:true,  diff:"easy"   },
+  { id:29, cat:"resources",   name:"Thank you for the music",              desc:"Find and gather a Boombox tape in the world.",                unlocked:true,  diff:"easy"   },
+  { id:30, cat:"resources",   name:"Data driven",                          desc:"Gather 100 Hard Drives from Crash Sites.",                    unlocked:false, diff:"medium", prog:[25,100] },
+  { id:31, cat:"resources",   name:"Consume",                              desc:"Gather 150 Mercer Spheres.",                                  unlocked:false, diff:"hard",   prog:[101,150]},
+  { id:32, cat:"resources",   name:"My skin feels itchy all of a sudden...", desc:"Gather 50 Somersloops.",                                   unlocked:false, diff:"hard",   prog:[30,50]  },
+  // Research
+  { id:33, cat:"research",    name:"Curiosity killed the cat...",          desc:"Complete a MAM research tree.",                               unlocked:true,  diff:"easy"   },
+  { id:34, cat:"research",    name:"Master Chef",                          desc:"Unlock your first alternate recipe.",                         unlocked:true,  diff:"easy"   },
+  { id:35, cat:"research",    name:"...Satisfactory brought it back",      desc:"Complete all MAM research trees.",                            unlocked:false, diff:"hard",   prog:[0,1]    },
+  // Misc
+  { id:36, cat:"misc",        name:"Do you want a medal?",                 desc:"Complete the Onboarding process.",                            unlocked:true,  diff:"easy"   },
+  { id:37, cat:"misc",        name:"Are you sure that's coffee?",          desc:"Drink Coffee.",                                               unlocked:true,  diff:"easy"   },
+  { id:38, cat:"misc",        name:"Now where to spend it...",             desc:"Print out your first Coupon.",                                unlocked:true,  diff:"easy"   },
+  { id:39, cat:"misc",        name:"That was a close one",                 desc:"Survive a fall on 1 health point.",                           unlocked:true,  diff:"easy"   },
+  { id:40, cat:"misc",        name:"Too fast, Too factory",                desc:"Move faster than 140 km/h.",                                  unlocked:true,  diff:"easy"   },
+  { id:41, cat:"misc",        name:"Heal this, nature!",                   desc:"Destroy 1000 foliage.",                                       unlocked:true,  diff:"easy"   },
+  { id:42, cat:"misc",        name:"The floor is lava",                    desc:"Avoid touching the ground for 30 minutes.",                   unlocked:false, diff:"medium", prog:[28,30]  },
+  { id:43, cat:"misc",        name:"Do you need that?",                    desc:"Buy the Golden Nut Statue from the AWESOME Shop.",            unlocked:false, diff:"medium", prog:[0,1]    },
+  // Hidden
+  { id:44, cat:"hidden",      name:"???",                                  desc:"Details will be revealed once unlocked.",                     unlocked:false, diff:"unknown", hidden:true  },
+];
+
+function AchievementPage() {
+  const game = GAMES.satisfactory;
+  const [unlocked, setUnlocked] = useState(() => new Set(SATIS_ACHIEVEMENTS.filter(a => a.unlocked).map(a => a.id)));
+  const [filter, setFilter]       = useState("all");
+  const [catFilter, setCatFilter] = useState("all");
+  const [hov, setHov]             = useState(null);
+
+  const toggle = id => setUnlocked(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
+  });
+
+  const visible = useMemo(() => SATIS_ACHIEVEMENTS.filter(a => {
+    if (catFilter !== "all" && a.cat !== catFilter) return false;
+    if (filter === "unlocked") return unlocked.has(a.id);
+    if (filter === "locked")   return !unlocked.has(a.id);
+    return true;
+  }), [filter, catFilter, unlocked]);
+
+  const total = SATIS_ACHIEVEMENTS.length;
+  const done  = unlocked.size;
+  const pct   = Math.round((done / total) * 100);
+
+  return (
+    <div>
+      <Nav current="satisfactory" />
+      <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 20px" }}>
+        {/* Header */}
+        <div style={{ padding: "32px 0 20px" }}>
+          <a onClick={() => go("satisfactory")} style={{ cursor: "pointer", color: T.dim, fontSize: 11, fontFamily: T.font, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 12 }}>← Satisfactory</a>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 4px", color: game.color }}>Achievement Tracker</h1>
+              <p style={{ fontSize: 11, color: T.dim, margin: 0, fontFamily: T.mono }}>Click any achievement to toggle completion</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 36, fontWeight: 800, fontFamily: T.mono, color: game.color, lineHeight: 1 }}>
+                {done}<span style={{ fontSize: 18, color: T.dim }}>/{total}</span>
+              </div>
+              <div style={{ fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em" }}>Unlocked</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 11, color: T.dim, fontFamily: T.mono }}>Completion</span>
+            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: T.mono, color: game.color }}>{pct}%</span>
+          </div>
+          <div style={{ height: 6, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${game.color}, #fbbf24)`, borderRadius: 99, transition: "width 0.4s ease" }} />
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 10, flexWrap: "wrap" }}>
+            {Object.entries(ACH_DIFF).filter(([k]) => k !== "unknown").map(([key, d]) => {
+              const t  = SATIS_ACHIEVEMENTS.filter(a => a.diff === key).length;
+              const dn = SATIS_ACHIEVEMENTS.filter(a => a.diff === key && unlocked.has(a.id)).length;
+              return (
+                <div key={key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: d.color }} />
+                  <span style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>{d.label}: <span style={{ color: d.color }}>{dn}/{t}</span></span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+          {[{ key: "all", label: "All", icon: "🏆" }, ...ACH_CATS].map(c => (
+            <button key={c.key} onClick={() => setCatFilter(c.key)} style={{
+              padding: "5px 12px", borderRadius: 20, fontSize: 11, fontFamily: T.font, fontWeight: 600,
+              cursor: "pointer", border: `1px solid ${catFilter === c.key ? game.color : T.border}`,
+              background: catFilter === c.key ? game.colorDim : T.card,
+              color: catFilter === c.key ? game.color : T.dim, transition: "all 0.15s",
+            }}>{c.icon} {c.label}</button>
+          ))}
+          <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+            {[["all","All"],["unlocked","✅ Done"],["locked","🔒 Locked"]].map(([val, label]) => (
+              <button key={val} onClick={() => setFilter(val)} style={{
+                padding: "5px 10px", borderRadius: 6, fontSize: 10, fontFamily: T.mono, fontWeight: 600,
+                cursor: "pointer", border: `1px solid ${filter === val ? game.color : T.border}`,
+                background: filter === val ? game.colorDim : "transparent",
+                color: filter === val ? game.color : T.dim, transition: "all 0.15s",
+              }}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: T.dim, fontFamily: T.mono, marginBottom: 12 }}>
+          Showing {visible.length} achievement{visible.length !== 1 ? "s" : ""}
+        </div>
+
+        {/* Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 8, paddingBottom: 48 }}>
+          {visible.map(a => {
+            const isUnlocked = unlocked.has(a.id);
+            const d = ACH_DIFF[a.diff];
+            const isHov = hov === a.id;
+            const progPct = a.prog ? Math.round((a.prog[0] / a.prog[1]) * 100) : null;
+            return (
+              <div key={a.id}
+                onClick={() => !a.hidden && toggle(a.id)}
+                onMouseEnter={() => setHov(a.id)}
+                onMouseLeave={() => setHov(null)}
+                style={{
+                  background: isUnlocked ? "rgba(249,115,22,0.06)" : T.card,
+                  border: `1px solid ${isUnlocked ? "rgba(249,115,22,0.3)" : isHov && !a.hidden ? T.dim : T.border}`,
+                  borderRadius: 10, padding: "12px 14px", cursor: a.hidden ? "default" : "pointer",
+                  transition: "all 0.18s", display: "flex", gap: 12, alignItems: "flex-start",
+                  opacity: isUnlocked ? 1 : a.hidden ? 0.4 : 0.72,
+                  transform: isHov && !a.hidden ? "translateY(-1px)" : "none",
+                }}>
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 8, fontSize: 20,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: isUnlocked ? game.colorDim : T.border,
+                    border: `1px solid ${isUnlocked ? "rgba(249,115,22,0.3)" : T.border}`,
+                    filter: isUnlocked || a.hidden ? "none" : "grayscale(1) brightness(0.4)",
+                  }}>{a.hidden ? "🔒" : ACH_CAT_ICON[a.cat]}</div>
+                  {isUnlocked && (
+                    <div style={{
+                      position: "absolute", bottom: -4, right: -4, width: 16, height: 16,
+                      borderRadius: "50%", background: game.color, display: "flex",
+                      alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 800, color: "#000",
+                    }}>✓</div>
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3, color: isUnlocked ? game.color : a.hidden ? T.dim : T.text }}>{a.name}</div>
+                  <p style={{ margin: "0 0 6px", fontSize: 10, color: T.dim, lineHeight: 1.5 }}>{a.desc}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {!a.hidden && <span style={{ fontSize: 9, fontFamily: T.mono, color: d.color, background: d.bg, padding: "2px 7px", borderRadius: 4 }}>{d.label}</span>}
+                    {a.prog && !isUnlocked && (
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, minWidth: 80 }}>
+                        <div style={{ flex: 1, height: 3, background: T.border, borderRadius: 99, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${progPct}%`, background: game.color, borderRadius: 99 }} />
+                        </div>
+                        <span style={{ fontSize: 9, fontFamily: T.mono, color: T.dim, whiteSpace: "nowrap" }}>{a.prog[0]}/{a.prog[1]}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {visible.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: T.dim }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🏆</div>
+            <div style={{ fontFamily: T.font, fontSize: 14 }}>No achievements match this filter</div>
+          </div>
+        )}
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
 // ─── ROUTER ───
 export default function App() {
   const hash = useHash();
   let page;
   if (hash === "") page = <HomePage />;
   else if (hash === "satisfactory/planner") page = <PlannerPage />;
+  else if (hash === "satisfactory/achievements") page = <AchievementPage />;
   else if (hash.includes("/") && !GAMES[hash.split("/")[0]]) page = <HomePage />;
   else if (hash.includes("/")) {
     const [gameKey, tool] = hash.split("/");

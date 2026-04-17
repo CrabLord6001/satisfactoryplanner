@@ -593,7 +593,7 @@ function PlannerPage() {
 // To add a new build: upload to YouTube and add an entry below with the video ID from the URL.
 // YouTube URL: https://www.youtube.com/watch?v=VIDEO_ID  →  youtubeId: "VIDEO_ID"
 const BUILDS = [
-  { id: 1, title: "Iron Production Line", desc: "Early-game iron setup — smelting and plating.", youtubeId: "qCuDT8GmLrI", date: "2026-04-17" },
+  { id: 1, title: "Biomass Maker Interface (BMI)", desc: "Easy and efficient way to fill Biomass Burner early game.", youtubeId: "qCuDT8GmLrI", date: "2026-04-17" },
 ];
 
 function BuildShowcasePage() {

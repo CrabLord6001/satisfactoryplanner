@@ -30,6 +30,7 @@ const T = {
 const GAMES = {
   satisfactory: {
     title: "Satisfactory",
+    logo: "/Satisfactory_logo.webp",
     desc: "Factory builder on an alien planet. Optimize your production",
     color: "#f97316",
     colorDim: "rgba(249,115,22,0.12)",
@@ -121,39 +122,31 @@ function GameCard({ gameKey, game }) {
   return (
     <div onClick={() => go(gameKey)}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onTouchStart={() => setHov(true)} onTouchEnd={() => { setHov(false); go(gameKey); }}
       style={{
-        background: T.card, border: `1px solid ${hov ? game.color : T.border}`,
-        borderRadius: 14, padding: "28px 24px", cursor: "pointer",
+        background: T.card,
+        border: `2px solid ${hov ? game.color : T.border}`,
+        borderRadius: 14, cursor: "pointer",
         transition: "all 0.3s ease", position: "relative", overflow: "hidden",
-        boxShadow: hov ? `0 0 40px ${game.colorDim}` : "none",
+        boxShadow: hov ? `0 0 40px ${game.colorDim}, 0 0 0 1px ${game.color}33` : "none",
         transform: hov ? "translateY(-4px)" : "translateY(0)",
       }}>
       {/* Accent glow bar */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 3,
+        position: "absolute", top: 0, left: 0, right: 0, height: 3, zIndex: 2,
         background: `linear-gradient(90deg, transparent, ${game.color}, transparent)`,
-        opacity: hov ? 1 : 0.3, transition: "opacity 0.3s",
+        opacity: hov ? 1 : 0.4, transition: "opacity 0.3s",
       }} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-        <div>
-          <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 800, fontFamily: T.font, color: game.color }}>{game.title}</h2>
-          <span style={{ fontSize: 10, fontFamily: T.mono, color: T.dim, letterSpacing: "0.05em" }}>{game.genre}</span>
+      {game.logo ? (
+        <img src={game.logo} alt={game.title}
+          style={{ width: "100%", display: "block", objectFit: "cover" }}
+          draggable={false}
+        />
+      ) : (
+        <div style={{ padding: "28px 24px" }}>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: T.font, color: game.color }}>{game.title}</h2>
         </div>
-      </div>
-      <p style={{ margin: "0 0 14px", fontSize: 12, color: T.dim, lineHeight: 1.6 }}>{game.tagline}</p>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {game.tools.filter(t => t.ready).map(t => (
-          <span key={t.name} style={{
-            fontSize: 9, fontFamily: T.mono, color: game.color,
-            background: game.colorDim, padding: "3px 8px", borderRadius: 4,
-          }}>{t.icon} {t.name}</span>
-        ))}
-        {game.tools.filter(t => !t.ready).length > 0 && (
-          <span style={{ fontSize: 9, fontFamily: T.mono, color: T.dim, padding: "3px 8px" }}>
-            +{game.tools.filter(t => !t.ready).length} coming
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -458,6 +451,34 @@ const ALL_RECIPES = {
     "Heavy Encased Frame":  { machine: "Manufacturer", raw: false, time: 64, inputs: [["Modular Frame",8],["Encased Industrial Beam",10],["Steel Pipe",36],["Concrete",22]],     output: 3, rate: 2.8125,power: 55 },
     "Heavy Flexible Frame": { machine: "Manufacturer", raw: false, time: 16, inputs: [["Modular Frame",5],["Encased Industrial Beam",3],["Rubber",20],["Screw",104]],           output: 1, rate: 3.75,  power: 55 },
   },
+
+  // ── High-tier intermediates ──
+  "High-Speed Connector": {
+    default: { machine: "Manufacturer", raw: false, time: 16, inputs: [["Quickwire",56],["Cable",10],["Circuit Board",1]], output: 1, rate: 3.75, power: 55 },
+  },
+  "Supercomputer": {
+    default: { machine: "Manufacturer", raw: false, time: 32, inputs: [["Computer",4],["AI Limiter",2],["High-Speed Connector",3],["Plastic",28]], output: 1, rate: 1.875, power: 55 },
+  },
+
+  // ── Space Elevator parts ──
+  "Versatile Framework": {
+    default: { machine: "Assembler", raw: false, time: 24, inputs: [["Modular Frame",1],["Steel Beam",12]], output: 2, rate: 5, power: 15 },
+  },
+  "Automated Wiring": {
+    default: { machine: "Assembler", raw: false, time: 24, inputs: [["Stator",1],["Cable",20]], output: 1, rate: 2.5, power: 15 },
+  },
+  "Modular Engine": {
+    default: { machine: "Manufacturer", raw: false, time: 60, inputs: [["Motor",2],["Rubber",15],["Smart Plating",2]], output: 1, rate: 1, power: 55 },
+  },
+  "Adaptive Control Unit": {
+    default: { machine: "Manufacturer", raw: false, time: 60, inputs: [["Automated Wiring",5],["Circuit Board",5],["Heavy Modular Frame",1],["Computer",2]], output: 1, rate: 1, power: 55 },
+  },
+  "Magnetic Field Generator": {
+    default: { machine: "Assembler", raw: false, time: 120, inputs: [["Versatile Framework",5],["Electromagnetic Control Rod",2]], output: 2, rate: 1, power: 15 },
+  },
+  "Assembly Director System": {
+    default: { machine: "Assembler", raw: false, time: 80, inputs: [["Adaptive Control Unit",2],["Supercomputer",1]], output: 1, rate: 0.75, power: 15 },
+  },
 };
 
 const getR = (it, ch) => ALL_RECIPES[it]?.[ch[it] || "default"] || ALL_RECIPES[it]?.default;
@@ -521,28 +542,71 @@ function plannerLayout(root) {
   return { nodes: all, edges, W: Math.max(...all.map(p => p.x + p.w)) + 20, H: Math.max(...all.map(p => p.y + p.h)) + 20 };
 }
 
-function MNode({ n, sel, onSel, onDragStart }) {
+function MNode({ n, sel, onSel, onDragStart, rotation }) {
   const c = n.raw ? MC.raw : (MC[n.machine] || MC.raw);
-  const mc = Math.ceil(n.mc), fp = MACHINE_FP[n.machine], MGAP = 8;
+  const mc = Math.ceil(n.mc), MGAP = 8;
+  const rot = rotation || 0;
+
+  // Swap footprint dims when rotated 90/270
+  const fp0 = MACHINE_FP[n.machine];
+  const fp = fp0 && (rot === 90 || rot === 270) ? { w: fp0.l, h: fp0.w, l: fp0.w } : fp0;
+
   const cells = [];
+  const manifoldLines = [];
+
   if (fp && !n.raw) {
     const perRow = Math.min(mc, 4), rows = Math.ceil(mc / perRow);
-    const mW = fp.w * F, mH = fp.l * F, gridW = perRow * mW + (perRow - 1) * MGAP, ox = (n.w - gridW) / 2, oy = 26;
-    for (let r = 0; r < rows; r++) { const inRow = r < rows - 1 ? perRow : mc - r * perRow;
-      for (let m = 0; m < inRow; m++) { const mx0 = ox + m * (mW + MGAP), my0 = oy + r * (mH + MGAP);
+    const mW = fp.w * F, mH = (fp.l || fp.h || fp.w) * F;
+    const gridW = perRow * mW + (perRow - 1) * MGAP;
+    const ox = (n.w - gridW) / 2, oy = 26;
+
+    for (let r = 0; r < rows; r++) {
+      const inRow = r < rows - 1 ? perRow : mc - r * perRow;
+      const rowX0 = ox;
+      const rowX1 = ox + (inRow - 1) * (mW + MGAP) + mW;
+      const midY = oy + r * (mH + MGAP) + mH / 2;
+
+      for (let m = 0; m < inRow; m++) {
+        const mx0 = ox + m * (mW + MGAP), my0 = oy + r * (mH + MGAP);
         for (let fy = 0; fy < fp.l; fy++) for (let fx = 0; fx < fp.w; fx++)
           cells.push(<rect key={`${r}-${m}-${fx}-${fy}`} x={mx0+fx*F} y={my0+fy*F} width={F-2} height={F-2} rx={3} fill={c.fill} stroke={c.stroke} strokeWidth={0.7} />);
         cells.push(<rect key={`m-${r}-${m}`} x={mx0-1} y={my0-1} width={mW} height={mH} rx={3} fill="none" stroke={c.stroke} strokeWidth={1.2} opacity={0.9} />);
         cells.push(<text key={`l-${r}-${m}`} x={mx0+mW/2} y={my0+mH/2} textAnchor="middle" dominantBaseline="central" fill={c.text} fontSize={9} fontFamily="monospace" fontWeight={600} opacity={0.55}>{n.machine?.charAt(0)}</text>);
       }
+
+      // Manifold belt line when multiple machines in this row
+      if (inRow > 1) {
+        // Input belt (top of machines in this row)
+        const beltY = oy + r * (mH + MGAP) - 5;
+        manifoldLines.push(
+          <g key={`belt-${r}`}>
+            {/* Input manifold belt */}
+            <rect x={rowX0} y={beltY - 3} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.55} />
+            {/* Output manifold belt */}
+            <rect x={rowX0} y={oy + r * (mH + MGAP) + mH + 1} width={rowX1 - rowX0} height={4} rx={2} fill={c.stroke} opacity={0.35} />
+            {/* Drop lines from belt to each machine */}
+            {Array.from({ length: inRow }, (_, m) => {
+              const mx0 = ox + m * (mW + MGAP);
+              return (
+                <line key={`drop-${m}`}
+                  x1={mx0 + mW/2} y1={beltY - 3}
+                  x2={mx0 + mW/2} y2={oy + r * (mH + MGAP)}
+                  stroke={c.stroke} strokeWidth={1.5} strokeDasharray="2,2" opacity={0.5} />
+              );
+            })}
+          </g>
+        );
+      }
     }
   }
+
   return (
     <g transform={`translate(${n.x},${n.y})`}
        onMouseDown={e => { e.stopPropagation(); onDragStart(e, n); }}
        onClick={e => { e.stopPropagation(); onSel(n); }}
        style={{ cursor: "grab" }}>
       <rect width={n.w} height={n.h} rx={6} fill="#0d1117" stroke={sel === n.id ? "#fbbf24" : c.stroke} strokeWidth={sel === n.id ? 2 : 1} opacity={0.95} />
+      {manifoldLines}
       {cells}
       <text x={n.w/2} y={12} textAnchor="middle" fill={c.text} fontSize={10} fontWeight={600} fontFamily="system-ui">{n.item.length > 20 ? n.item.slice(0,18)+".." : n.item}</text>
       {n.raw ? <text x={n.w/2} y={n.h-6} textAnchor="middle" fill="#68d391" fontSize={9} fontFamily="monospace">{n.rate.toFixed(1)}/min</text>
@@ -573,11 +637,16 @@ function PlannerPage() {
   const [drag, setDrag] = useState(false);
   const [ds, setDs] = useState(null);
   const [nodePositions, setNodePositions] = useState({});
-  const [draggingNode, setDraggingNode] = useState(null);
-  const [dnOffset, setDnOffset] = useState(null);
+  const [nodeRotations, setNodeRotations] = useState({});
+  const [draggingNode, setDraggingNode] = useState(null); // for cursor style only
+  const draggingNodeRef = useRef(null);
+  const dnOffsetRef = useRef(null);
   const dRef = useRef(null);
   const canvasRef = useRef(null);
   const dragMovedRef = useRef(false);
+  const touchStateRef = useRef({});
+  const panTouchRef = useRef(null);
+  const touchGestureRef = useRef(null);
 
   const craftable = useMemo(() => Object.entries(ALL_RECIPES).filter(([, r]) => !r.default.raw).map(([n]) => n).sort(), []);
   const filt = useMemo(() => craftable.filter(i => i.toLowerCase().includes(search.toLowerCase())), [search, craftable]);
@@ -605,31 +674,127 @@ function PlannerPage() {
   }, [tree]);
 
   useEffect(() => { const h = e => { if (dRef.current && !dRef.current.contains(e.target)) setShowDrop(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
-  const pick = i => { setItem(i); setSearch(""); setShowDrop(false); setSel(null); setRate(ALL_RECIPES[i]?.default?.rate||1); setPan({x:20,y:20}); setZoom(1); setNodePositions({}); };
+
+  // Keep touchStateRef always current so the touch handlers (which are registered once) can read latest values
+  touchStateRef.current = { pan, zoom, mergedNodes, nodePositions };
+
+  // Touch support: drag nodes, pan canvas, pinch-to-zoom
+  // Must be non-passive to call e.preventDefault() and suppress page scroll
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const getCanvasPos = (clientX, clientY) => {
+      const rect = canvas.getBoundingClientRect();
+      const { pan, zoom } = touchStateRef.current;
+      return { x: (clientX - rect.left - pan.x) / zoom, y: (clientY - rect.top - pan.y) / zoom };
+    };
+
+    const hitTestNode = (x, y) => {
+      const { mergedNodes } = touchStateRef.current;
+      return (mergedNodes || []).find(n => x >= n.x && x <= n.x + n.w && y >= n.y && y <= n.y + n.h) || null;
+    };
+
+    const onTouchStart = e => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const pos = getCanvasPos(t.clientX, t.clientY);
+        const node = hitTestNode(pos.x, pos.y);
+        if (node) {
+          dragMovedRef.current = false;
+          const { nodePositions } = touchStateRef.current;
+          const nx = nodePositions[node.id]?.x ?? node.x;
+          const ny = nodePositions[node.id]?.y ?? node.y;
+          draggingNodeRef.current = node.id;
+          dnOffsetRef.current = { x: pos.x - nx, y: pos.y - ny };
+          setDraggingNode(node.id);
+          touchGestureRef.current = { type: 'node' };
+        } else {
+          const { pan } = touchStateRef.current;
+          panTouchRef.current = { x: t.clientX - pan.x, y: t.clientY - pan.y };
+          touchGestureRef.current = { type: 'pan' };
+        }
+      } else if (e.touches.length === 2) {
+        draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
+        setDraggingNode(null);
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchGestureRef.current = { type: 'pinch', startDist: Math.hypot(dx, dy), startZoom: touchStateRef.current.zoom };
+      }
+    };
+
+    const onTouchMove = e => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        if (draggingNodeRef.current && dnOffsetRef.current) {
+          dragMovedRef.current = true;
+          const pos = getCanvasPos(t.clientX, t.clientY);
+          setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: pos.x - dnOffsetRef.current.x, y: pos.y - dnOffsetRef.current.y } }));
+        } else if (panTouchRef.current) {
+          setPan({ x: t.clientX - panTouchRef.current.x, y: t.clientY - panTouchRef.current.y });
+        }
+      } else if (e.touches.length === 2 && touchGestureRef.current?.type === 'pinch') {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const { startDist, startZoom } = touchGestureRef.current;
+        setZoom(Math.max(0.08, Math.min(3, startZoom * (Math.hypot(dx, dy) / startDist))));
+      }
+    };
+
+    const onTouchEnd = e => {
+      e.preventDefault();
+      if (e.touches.length === 0) {
+        draggingNodeRef.current = null; dnOffsetRef.current = null; panTouchRef.current = null;
+        setDraggingNode(null); touchGestureRef.current = null;
+      } else if (e.touches.length === 1) {
+        // Dropped from 2 fingers to 1 — switch to pan
+        const t = e.touches[0];
+        const { pan } = touchStateRef.current;
+        panTouchRef.current = { x: t.clientX - pan.x, y: t.clientY - pan.y };
+        draggingNodeRef.current = null; dnOffsetRef.current = null;
+        setDraggingNode(null); touchGestureRef.current = { type: 'pan' };
+      }
+    };
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []); // intentionally empty — handlers read live values via touchStateRef
+
+  const pick = i => { setItem(i); setSearch(""); setShowDrop(false); setSel(null); setRate(ALL_RECIPES[i]?.default?.rate||1); setPan({x:20,y:20}); setZoom(1); setNodePositions({}); setNodeRotations({}); };
   const onWheel = useCallback(e => { e.preventDefault(); setZoom(z => Math.max(0.08, Math.min(3, z * (e.deltaY>0?0.9:1.1)))); }, []);
-  const md = e => { setDrag(true); setDs({x:e.clientX-pan.x,y:e.clientY-pan.y}); };
+  const md = e => { if (!draggingNodeRef.current) { setDrag(true); setDs({x:e.clientX-pan.x,y:e.clientY-pan.y}); } };
   const mm = e => {
-    if (draggingNode && dnOffset && canvasRef.current) {
+    if (draggingNodeRef.current && dnOffsetRef.current && canvasRef.current) {
       dragMovedRef.current = true;
       const rect = canvasRef.current.getBoundingClientRect();
       const mx = (e.clientX - rect.left - pan.x) / zoom;
       const my = (e.clientY - rect.top - pan.y) / zoom;
-      setNodePositions(prev => ({ ...prev, [draggingNode]: { x: mx - dnOffset.x, y: my - dnOffset.y } }));
+      setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: mx - dnOffsetRef.current.x, y: my - dnOffsetRef.current.y } }));
     } else if (drag && ds) {
       setPan({x: e.clientX - ds.x, y: e.clientY - ds.y});
     }
   };
-  const mu = () => { setDrag(false); setDs(null); setDraggingNode(null); setDnOffset(null); };
+  const mu = () => { setDrag(false); setDs(null); draggingNodeRef.current = null; dnOffsetRef.current = null; setDraggingNode(null); };
   const handleNodeDragStart = useCallback((e, n) => {
     if (!canvasRef.current) return;
+    e.stopPropagation();
     dragMovedRef.current = false;
     const rect = canvasRef.current.getBoundingClientRect();
     const mx = (e.clientX - rect.left - pan.x) / zoom;
     const my = (e.clientY - rect.top - pan.y) / zoom;
     const nx = nodePositions[n.id]?.x ?? n.x;
     const ny = nodePositions[n.id]?.y ?? n.y;
-    setDraggingNode(n.id);
-    setDnOffset({ x: mx - nx, y: my - ny });
+    draggingNodeRef.current = n.id;
+    dnOffsetRef.current = { x: mx - nx, y: my - ny };
+    setDraggingNode(n.id); // triggers cursor style update
   }, [pan, zoom, nodePositions]);
   useEffect(() => { if(lo) { setZoom(Math.min(1, 680/(lo.W+40))); setNodePositions({}); } }, [lo]);
   const toggleR = (it,rn) => setCh(p => ({...p,[it]:(p[it]||"default")===rn?"default":rn}));
@@ -640,7 +805,7 @@ function PlannerPage() {
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "12px 16px 0" }}>
         <a onClick={() => go("satisfactory")} style={{ cursor: "pointer", color: T.dim, fontSize: 11, fontFamily: T.font, textDecoration: "none" }}>← Satisfactory</a>
         <h1 style={{ fontSize: 18, fontWeight: 700, fontFamily: T.font, margin: "8px 0 2px", color: "#f97316" }}>Production Planner</h1>
-        <p style={{ color: T.dim, fontSize: 10, margin: "0 0 10px" }}>1.0/1.1 · Foundation footprints · Alt recipes · Pan: drag · Zoom: scroll</p>
+        <p style={{ color: T.dim, fontSize: 10, margin: "0 0 10px" }}>1.0/1.1 · Foundation footprints · Alt recipes · Pan: drag · Zoom: scroll/pinch · Drag nodes to rearrange</p>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8, alignItems: "flex-end" }}>
           <div style={{ flex: "1 1 180px", position: "relative" }} ref={dRef}>
@@ -660,7 +825,7 @@ function PlannerPage() {
               style={{ width: "100%", padding: "7px 10px", background: "#151b2b", border: "1px solid #2d3748", borderRadius: 6, color: "#fbbf24", fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
           <button onClick={() => { setCh({}); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset</button>
-          <button onClick={() => { setNodePositions({}); setPan({ x: 20, y: 20 }); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Layout</button>
+          <button onClick={() => { setNodePositions({}); setNodeRotations({}); setPan({ x: 20, y: 20 }); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Layout</button>
         </div>
 
         {totals && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 6, marginBottom: 8 }}>
@@ -678,7 +843,7 @@ function PlannerPage() {
       </div>
 
       <div style={{ maxWidth: 940, margin: "0 auto", padding: "0 16px" }}>
-        <div ref={canvasRef} style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: draggingNode ? "grabbing" : drag ? "grabbing" : "grab" }}
+        <div ref={canvasRef} style={{ background: "#0d1117", border: "1px solid #1e293b", borderRadius: 10, overflow: "hidden", height: 480, position: "relative", cursor: draggingNode ? "grabbing" : drag ? "grabbing" : "grab", touchAction: "none", userSelect: "none" }}
           onWheel={onWheel} onMouseDown={md} onMouseMove={mm} onMouseUp={mu} onMouseLeave={mu} onClick={() => setSel(null)}>
           <svg width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
             <defs><pattern id="fg" width={F} height={F} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x%(F*zoom)},${pan.y%(F*zoom)}) scale(${zoom})`}>
@@ -690,49 +855,63 @@ function PlannerPage() {
               <path d="M1 2L8 5L1 8" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" /></marker></defs>
             <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
               {mergedEdges.map((e,i) => <PEdge key={i} e={e} />)}
-              {mergedNodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => { n.hasAlts ? setSel(n.id) : setSel(null); }} onDragStart={handleNodeDragStart} />)}
+              {mergedNodes.map((n,i) => <MNode key={n.id+i} n={n} sel={sel} onSel={n => setSel(n.id)} onDragStart={handleNodeDragStart} rotation={nodeRotations[n.id] || 0} />)}
             </g>
           </svg>}
           <div style={{ position: "absolute", bottom: 6, right: 8, color: "#3a5570", fontSize: 9, fontFamily: "monospace" }}>{(zoom*100).toFixed(0)}%</div>
           {!sel && <div style={{ position: "absolute", top: 8, left: 10, color: "#3a5570", fontSize: 9, fontFamily: "monospace" }}>Click a node with alts to swap recipe</div>}
         </div>
 
-        {/* Alt recipe panel */}
+        {/* Node info / Alt recipe panel */}
         {sel && lo && (() => {
-          const node = lo.nodes.find(n => n.id === sel);
-          if (!node || !node.hasAlts) return null;
+          const node = mergedNodes.find(n => n.id === sel) || lo.nodes.find(n => n.id === sel);
+          if (!node) return null;
           const alts = getAlts(node.item);
           const active = ch[node.item] || "default";
           const r = getR(node.item, ch);
+          const curRot = nodeRotations[node.id] || 0;
+          const rotateNode = () => setNodeRotations(prev => ({ ...prev, [node.id]: ((prev[node.id] || 0) + 90) % 360 }));
           return (
             <div style={{ background: "#0d1117", border: "1px solid #2d3748", borderRadius: 8, padding: "12px 16px", marginTop: 6 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{node.item}</span>
-                <span style={{ color: "#4a5568", fontSize: 9, fontFamily: "monospace" }}>click canvas to dismiss</span>
-              </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {["default", ...alts].map(rn => {
-                  const rec = ALL_RECIPES[node.item]?.[rn];
-                  const isActive = active === rn;
-                  const tierCol = rec?.tier ? TIER_COL[rec.tier] : null;
-                  return (
-                    <button key={rn} onClick={e => { e.stopPropagation(); toggleR(node.item, rn); }}
-                      style={{
-                        padding: "5px 10px", borderRadius: 6, fontSize: 10, cursor: "pointer",
-                        fontFamily: "'JetBrains Mono',monospace", fontWeight: 600,
-                        border: `1px solid ${isActive ? "#fbbf24" : "#2d3748"}`,
-                        background: isActive ? "rgba(251,191,36,0.12)" : "#151b2b",
-                        color: isActive ? "#fbbf24" : "#94a3b8",
-                      }}>
-                      {rn === "default" ? "Default" : rn}
-                      {tierCol && <span style={{ marginLeft: 5, color: tierCol, fontSize: 9 }}>[{rec.tier}]</span>}
-                      {isActive && <span style={{ marginLeft: 5, color: "#fbbf24" }}>✓</span>}
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {!node.raw && MACHINE_FP[node.machine] && (
+                    <button onClick={rotateNode} title="Rotate machine layout"
+                      style={{ padding: "3px 8px", borderRadius: 5, fontSize: 10, cursor: "pointer",
+                        fontFamily: "'JetBrains Mono',monospace", border: "1px solid #4a5568",
+                        background: "#1e293b", color: "#94a3b8" }}>
+                      ↻ {curRot}°
                     </button>
-                  );
-                })}
+                  )}
+                  <span style={{ color: "#4a5568", fontSize: 9, fontFamily: "monospace" }}>click canvas to dismiss</span>
+                </div>
               </div>
+              {alts.length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                  {["default", ...alts].map(rn => {
+                    const rec = ALL_RECIPES[node.item]?.[rn];
+                    const isActive = active === rn;
+                    const tierCol = rec?.tier ? TIER_COL[rec.tier] : null;
+                    return (
+                      <button key={rn} onClick={e => { e.stopPropagation(); toggleR(node.item, rn); }}
+                        style={{
+                          padding: "5px 10px", borderRadius: 6, fontSize: 10, cursor: "pointer",
+                          fontFamily: "'JetBrains Mono',monospace", fontWeight: 600,
+                          border: `1px solid ${isActive ? "#fbbf24" : "#2d3748"}`,
+                          background: isActive ? "rgba(251,191,36,0.12)" : "#151b2b",
+                          color: isActive ? "#fbbf24" : "#94a3b8",
+                        }}>
+                        {rn === "default" ? "Default" : rn}
+                        {tierCol && <span style={{ marginLeft: 5, color: tierCol, fontSize: 9 }}>[{rec.tier}]</span>}
+                        {isActive && <span style={{ marginLeft: 5, color: "#fbbf24" }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               {r && !r.raw && (
-                <div style={{ marginTop: 8, fontSize: 9, color: "#4a5568", fontFamily: "monospace" }}>
+                <div style={{ fontSize: 9, color: "#4a5568", fontFamily: "monospace" }}>
                   {r.inputs.map(([inp, qty]) => `${qty}x ${inp}`).join(" + ")} → {r.output}x {node.item} · {r.rate}/min · {r.machine}
                 </div>
               )}
@@ -746,8 +925,6 @@ function PlannerPage() {
 }
 
 // ─── BUILD SHOWCASE DATA ───
-// To add a new build: upload to YouTube and add an entry below with the video ID from the URL.
-// YouTube URL: https://www.youtube.com/watch?v=VIDEO_ID  →  youtubeId: "VIDEO_ID"
 const BUILDS = [
   { id: 1, title: "Biomass Maker Interface (BMI)", desc: "Easy and efficient way to fill Biomass Burner early game.", youtubeId: "qCuDT8GmLrI", date: "2026-04-17" },
 ];
@@ -755,7 +932,6 @@ const BUILDS = [
 function BuildShowcasePage() {
   const game = GAMES.satisfactory;
   const [hov, setHov] = useState(null);
-
   return (
     <div>
       <Nav current="satisfactory" />
@@ -765,12 +941,8 @@ function BuildShowcasePage() {
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 6px", color: game.color }}>Build Showcase</h1>
           <p style={{ fontSize: 12, color: T.dim, margin: 0, fontFamily: T.font }}>Short clips of factory builds and automation setups.</p>
         </div>
-
         {BUILDS.length === 0 ? (
-          <div style={{
-            border: `1px dashed ${T.border}`, borderRadius: 14,
-            padding: "80px 20px", textAlign: "center", marginBottom: 48,
-          }}>
+          <div style={{ border: `1px dashed ${T.border}`, borderRadius: 14, padding: "80px 20px", textAlign: "center", marginBottom: 48 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: T.font, color: T.dim, margin: "0 0 8px" }}>First video coming soon</h2>
             <p style={{ fontSize: 12, color: T.dim, margin: 0, fontFamily: T.font, opacity: 0.6 }}>Build clips will appear here once uploaded.</p>
@@ -778,21 +950,12 @@ function BuildShowcasePage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingBottom: 48 }}>
             {BUILDS.map(b => (
-              <div key={b.id}
-                onMouseEnter={() => setHov(b.id)}
-                onMouseLeave={() => setHov(null)}
-                style={{
-                  background: T.card, border: `1px solid ${hov === b.id ? game.color : T.border}`,
-                  borderRadius: 14, overflow: "hidden", transition: "border-color 0.2s",
-                }}>
+              <div key={b.id} onMouseEnter={() => setHov(b.id)} onMouseLeave={() => setHov(null)}
+                style={{ background: T.card, border: `1px solid ${hov === b.id ? game.color : T.border}`, borderRadius: 14, overflow: "hidden", transition: "border-color 0.2s" }}>
                 <div style={{ position: "relative", paddingBottom: "56.25%", background: "#000" }}>
-                  <iframe
-                    src={`https://www.youtube.com/embed/${b.youtubeId}`}
-                    title={b.title}
+                  <iframe src={`https://www.youtube.com/embed/${b.youtubeId}`} title={b.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                  />
+                    allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} />
                 </div>
                 <div style={{ padding: "16px 20px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -823,14 +986,9 @@ function SaveTrackerPage() {
           <p style={{ fontSize: 12, color: T.dim, margin: "0 0 20px", fontFamily: T.font }}>To-do list and progress notes for active game saves.</p>
         </div>
         <div style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 48 }}>
-          <iframe
-            src="https://airtable.com/embed/appxctElpzY5nCCkY/shr7ZUbsRo1J8l7eH"
-            frameBorder="0"
-            onMouseWheel=""
-            width="100%"
-            height="600"
-            style={{ background: "transparent", display: "block" }}
-          />
+          <iframe src="https://airtable.com/embed/appxctElpzY5nCCkY/shr7ZUbsRo1J8l7eH"
+            frameBorder="0" onMouseWheel="" width="100%" height="600"
+            style={{ background: "transparent", display: "block" }} />
         </div>
       </div>
       <Footer />

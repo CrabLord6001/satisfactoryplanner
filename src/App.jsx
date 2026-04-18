@@ -809,10 +809,16 @@ function PlannerPage() {
               </div>)}
             </div>}
           </div>
-          <div style={{ flex: "0 0 80px" }}>
+          <div style={{ flex: "0 0 120px" }}>
             <label style={{ color: "#94a3b8", fontSize: 9, fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: 2 }}>/min</label>
-            <input type="number" value={rate} min={1} step={1} onChange={e => setRate(Math.max(1, parseFloat(e.target.value)||1))}
-              style={{ width: "100%", padding: "7px 10px", background: "#151b2b", border: "1px solid #2d3748", borderRadius: 6, color: "#fbbf24", fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: "none", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button onPointerDown={e => { e.preventDefault(); setRate(r => Math.max(1, r - 1)); }}
+                style={{ width: 28, height: 30, background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#fbbf24", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>−</button>
+              <input type="number" value={rate} min={1} step={1} onChange={e => setRate(Math.max(1, parseFloat(e.target.value)||1))}
+                style={{ width: "100%", padding: "7px 6px", background: "#151b2b", border: "1px solid #2d3748", borderRadius: 6, color: "#fbbf24", fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: "none", boxSizing: "border-box", textAlign: "center", MozAppearance: "textfield" }} />
+              <button onPointerDown={e => { e.preventDefault(); setRate(r => r + 1); }}
+                style={{ width: 28, height: 30, background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#fbbf24", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>+</button>
+            </div>
           </div>
           <button onClick={() => { setCh({}); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset</button>
           <button onClick={() => { setNodePositions({}); setNodeRotations({}); setPan({ x: 20, y: 20 }); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Layout</button>

@@ -721,10 +721,12 @@ function PlannerPage() {
   const handleTouchMove = useCallback(e => {
     if (e.touches.length === 1) {
       const t = e.touches[0];
-      if (draggingNodeRef.current && dnOffsetRef.current) {
+      const nodeId = draggingNodeRef.current;
+      const offset = dnOffsetRef.current;
+      if (nodeId && offset) {
         dragMovedRef.current = true;
         const pos = getCanvasPos(t.clientX, t.clientY);
-        setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: pos.x - dnOffsetRef.current.x, y: pos.y - dnOffsetRef.current.y } }));
+        setNodePositions(prev => ({ ...prev, [nodeId]: { x: pos.x - offset.x, y: pos.y - offset.y } }));
       } else if (panTouchRef.current) {
         setPan({ x: t.clientX - panTouchRef.current.x, y: t.clientY - panTouchRef.current.y });
       }

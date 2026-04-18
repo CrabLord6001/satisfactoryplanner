@@ -668,6 +668,19 @@ function PlannerPage() {
 
   useEffect(() => { const h = e => { if (dRef.current && !dRef.current.contains(e.target)) setShowDrop(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
 
+  // Prevent iOS Safari from stealing touches (swipe-back gesture causing blank screen)
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const prevent = e => e.preventDefault();
+    el.addEventListener('touchstart', prevent, { passive: false });
+    el.addEventListener('touchmove', prevent, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', prevent);
+      el.removeEventListener('touchmove', prevent);
+    };
+  }, []);
+
   // ── Touch helpers (React synthetic events, touchAction:none handles scroll prevention) ──
   const getCanvasPos = useCallback((clientX, clientY) => {
     const rect = canvasRef.current?.getBoundingClientRect();

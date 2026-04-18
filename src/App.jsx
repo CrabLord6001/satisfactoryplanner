@@ -786,7 +786,7 @@ function PlannerPage() {
     dnOffsetRef.current = { x: mx - nx, y: my - ny };
     setDraggingNode(n.id); // triggers cursor style update
   }, [pan, zoom, nodePositions]);
-  useEffect(() => { if(lo) { setZoom(Math.min(1, 680/(lo.W+40))); setNodePositions({}); } }, [lo]);
+  useEffect(() => { if(lo) { setZoom(Math.min(1, 680/(lo.W+40))); } }, [lo]);
   const toggleR = (it,rn) => setCh(p => ({...p,[it]:(p[it]||"default")===rn?"default":rn}));
 
   return (
@@ -820,7 +820,7 @@ function PlannerPage() {
                 style={{ width: 28, height: 30, background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#fbbf24", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>+</button>
             </div>
           </div>
-          <button onClick={() => { setCh({}); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset</button>
+          <button onClick={() => { setCh({}); setRate(ALL_RECIPES[item]?.default?.rate || 1); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Recipes</button>
           <button onClick={() => { setNodePositions({}); setNodeRotations({}); setPan({ x: 20, y: 20 }); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset Layout</button>
         </div>
 

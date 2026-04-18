@@ -760,12 +760,14 @@ function PlannerPage() {
   const onWheel = useCallback(e => { e.preventDefault(); setZoom(z => Math.max(0.08, Math.min(3, z * (e.deltaY>0?0.9:1.1)))); }, []);
   const md = e => { if (!draggingNodeRef.current) { setDrag(true); setDs({x:e.clientX-pan.x,y:e.clientY-pan.y}); } };
   const mm = e => {
-    if (draggingNodeRef.current && dnOffsetRef.current && canvasRef.current) {
+    const nodeId = draggingNodeRef.current;
+    const offset = dnOffsetRef.current;
+    if (nodeId && offset && canvasRef.current) {
       dragMovedRef.current = true;
       const rect = canvasRef.current.getBoundingClientRect();
       const mx = (e.clientX - rect.left - pan.x) / zoom;
       const my = (e.clientY - rect.top - pan.y) / zoom;
-      setNodePositions(prev => ({ ...prev, [draggingNodeRef.current]: { x: mx - dnOffsetRef.current.x, y: my - dnOffsetRef.current.y } }));
+      setNodePositions(prev => ({ ...prev, [nodeId]: { x: mx - offset.x, y: my - offset.y } }));
     } else if (drag && ds) {
       setPan({x: e.clientX - ds.x, y: e.clientY - ds.y});
     }
@@ -809,7 +811,7 @@ function PlannerPage() {
           </div>
           <div style={{ flex: "0 0 80px" }}>
             <label style={{ color: "#94a3b8", fontSize: 9, fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: 2 }}>/min</label>
-            <input type="number" value={rate} min={0.1} step={0.5} onChange={e => setRate(Math.max(0.1, parseFloat(e.target.value)||0.1))}
+            <input type="number" value={rate} min={1} step={1} onChange={e => setRate(Math.max(1, parseFloat(e.target.value)||1))}
               style={{ width: "100%", padding: "7px 10px", background: "#151b2b", border: "1px solid #2d3748", borderRadius: 6, color: "#fbbf24", fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
           <button onClick={() => { setCh({}); }} style={{ padding: "7px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", fontSize: 10, cursor: "pointer" }}>Reset</button>

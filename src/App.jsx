@@ -924,6 +924,7 @@ function PlannerPage() {
 
 // ─── BUILD SHOWCASE DATA ───
 const BUILDS = [
+  { id: 2, title: "Phase 3 Completion Tour", desc: "Tour of my factory build thus far after completing Phase 2 for the Space Elevator. Includes versatile framework and automated wire setup.", youtubeId: "iajK8_gb1h4", date: "2026-04-20" },
   { id: 1, title: "Biomass Maker Interface (BMI)", desc: "Easy and efficient way to fill Biomass Burner early game.", youtubeId: "qCuDT8GmLrI", date: "2026-04-17" },
 ];
 
